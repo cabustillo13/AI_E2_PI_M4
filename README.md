@@ -113,7 +113,30 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 | **Simulaciones** | ≥ 10 conversaciones por dominio con usuario simulado (testing suite de ElevenLabs) | `python -m evals.run_simulations <dominio>` | Antes de la demo / defensa |
 | Monitoreo online | Resolución, duración, TTFT p95, costo real, eventos del harness | `python -m evals.online_report <dominio>` + Langfuse | Continuo |
 
-Resultados: `evals/reports/*.md` (se generan al correr cada suite con las claves configuradas).
+### Resultados (oct-2026, `gpt-4.1-mini`, fecha de evals fija 2026-11-02)
+
+| Suite | Clínica | Logística | Cobranzas |
+|---|---|---|---|
+| Regresión (texto) | **8/8 (100 %)** | **7/7 (100 %)** | **8/8 (100 %)** |
+| Costo LLM de la suite | USD 0,029 | USD 0,018 | USD 0,031 |
+| Turno completo p95 (con tools, sin voz) | 2,9 s | 3,3 s | 3,4 s |
+| Visión: status correcto / campos exactos | 3/3 · 10/10 | 3/3 · 7/7 | 3/3 · 6/7 |
+
+Lo que encontraron los evals y se corrigió antes de llegar a estos números:
+
+- El LLM calculaba mal el día de la semana ("jueves 4 de noviembre" era miércoles) → las tools devuelven
+  la fecha ya escrita en palabras.
+- El LLM mandaba `RL100234` sin guion → las tools normalizan códigos y DNI (por voz llegan con mil formatos).
+- `consultar_remito` no pedía DNI → el agente revelaba quién recibió un paquete sin verificar identidad.
+- Doble confirmación antes de cancelar o reprogramar → una sola confirmación.
+- Visión tomaba la leyenda "Firma y aclaración" como firma y obedecía instrucciones escritas en el documento
+  → definición explícita de firma y campo `texto_sospechoso` que manda el documento a revisión.
+  **Hallazgo abierto:** en la factura con inyección el modelo todavía extrae `total = 0`; no pasa porque las
+  reglas (suma de ítems + texto sospechoso) la marcan `requiere_revision`. Defensa en capas.
+
+El turno completo (~3 s p95) incluye las vueltas de tools; en voz lo que se percibe es el TTFT, que se
+cubre con la frase corta previa a cada tool ("Dame un segundo…"). Simulaciones de ElevenLabs y monitoreo
+online: se corren una vez desplegado (`evals/reports/simulations_*.md`, `online_*.md`).
 
 ## 5. Costo estimado cada 1.000 conversaciones
 
