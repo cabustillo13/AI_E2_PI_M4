@@ -121,6 +121,12 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 | Costo LLM de la suite | USD 0,029 | USD 0,018 | USD 0,031 |
 | Turno completo p95 (con tools, sin voz) | 2,9 s | 3,3 s | 3,4 s |
 | Visión: status correcto / campos exactos | 3/3 · 10/10 | 3/3 · 7/7 | 3/3 · 6/7 |
+| Simulaciones ElevenLabs (agente real → Railway) | **11/11** | — | — |
+
+**En producción (clínica, Railway + ElevenLabs, 22 conversaciones simuladas):** TTFT p50 0,5 s / p95 1,3 s ·
+costo LLM medido USD 0,006 por conversación. Trazas en Langfuse (sesión = `conversation_id`).
+Canal telefónico: configurado por script (`elevenlabs/setup_phone.py`), **no probado en vivo** (la cuenta
+trial de Twilio no tiene saldo para el número; ver `docs/SETUP_CUENTAS.md`).
 
 Lo que encontraron los evals y se corrigió antes de llegar a estos números:
 
@@ -131,12 +137,13 @@ Lo que encontraron los evals y se corrigió antes de llegar a estos números:
 - Doble confirmación antes de cancelar o reprogramar → una sola confirmación.
 - Visión tomaba la leyenda "Firma y aclaración" como firma y obedecía instrucciones escritas en el documento
   → definición explícita de firma y campo `texto_sospechoso` que manda el documento a revisión.
+- El guardrail custom de la plataforma ("datos sensibles") cortaba la llamada al pedir DNI → 4/11
+  simulaciones fallaban; se acotó a tarjeta/CBU/CVV/claves → 11/11. Un guardrail mal acotado rompe el flujo principal.
   **Hallazgo abierto:** en la factura con inyección el modelo todavía extrae `total = 0`; no pasa porque las
   reglas (suma de ítems + texto sospechoso) la marcan `requiere_revision`. Defensa en capas.
 
 El turno completo (~3 s p95) incluye las vueltas de tools; en voz lo que se percibe es el TTFT, que se
-cubre con la frase corta previa a cada tool ("Dame un segundo…"). Simulaciones de ElevenLabs y monitoreo
-online: se corren una vez desplegado (`evals/reports/simulations_*.md`, `online_*.md`).
+cubre con la frase corta previa a cada tool ("Dame un segundo…"). Reportes en `evals/reports/`.
 
 ## 5. Costo estimado cada 1.000 conversaciones
 

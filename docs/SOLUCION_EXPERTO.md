@@ -67,6 +67,21 @@
 | 7 | Costos y logística de telefonía (trial de Twilio, números AR, créditos de ElevenLabs/Railway). | `docs/SETUP_CUENTAS.md` + plan B de defensa. | Prever créditos por estudiante o un número compartido por cohorte. |
 | 8 | MCP no figura en el temario de M4 (viene de M3 · C14). | Se reutiliza la misma API (mcp 1.x). | Mencionarlo como prerrequisito en la recorrida del scaffold (C16). |
 
+### Hallazgos al correr la solución contra servicios reales (para usar en clase)
+
+| Hallazgo | Detectado por | Corrección |
+|---|---|---|
+| El LLM calcula mal el día de la semana | Regresión | Las tools devuelven la fecha en palabras |
+| El LLM manda `RL100234` sin guion | Regresión | Normalización de códigos y DNI en las tools |
+| `consultar_remito` sin verificación de identidad | Regresión | La tool exige DNI del destinatario |
+| Doble confirmación antes de actuar | Regresión | Regla de "confirmar una sola vez" |
+| Visión toma la leyenda "Firma y aclaración" como firma; obedece texto inyectado | Eval de visión | Definición explícita de firma + campo `texto_sospechoso` |
+| Guardrail custom de plataforma corta la llamada al pedir DNI | Simulaciones ElevenLabs | Guardrail acotado a tarjeta/CBU/CVV/claves |
+
+Estado verificado: regresión 100 % en los 3 dominios, visión 9/9, simulaciones 11/11 (clínica) contra el
+agente real desplegado. **No verificado en vivo:** canal telefónico (sin número de Twilio con saldo) y los
+agentes de logística y cobranzas en ElevenLabs (se crean con el mismo script).
+
 ## 9.4 Mapa clase → código de la solución
 
 | Clase | Tema | Archivos de referencia |

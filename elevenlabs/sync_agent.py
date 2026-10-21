@@ -10,7 +10,7 @@ Qué configura:
 - Knowledge base: la sección '# Base de conocimiento' del domain pack.
 - Tool de sistema end_call (la ejecuta ElevenLabs cuando el backend la pide).
 - Evaluación post-llamada y recolección de datos (del frontmatter).
-Los guardrails de plataforma se activan desde el dashboard (ver docs/SETUP_CUENTAS.md) y quedan en el export.
+- Guardrails de plataforma: foco en el rol, prompt injection, contenido dañino y uno custom de datos de pago.
 """
 
 from __future__ import annotations
@@ -23,6 +23,24 @@ import sys
 from client import AGENTS_DIR, check, client
 
 from src.domain import load_domain
+
+# Guardrails de la plataforma (capa extra a los del backend). "medical_and_legal_information" queda apagado:
+# en la clínica cortaría llamadas legítimas cuando el paciente describe síntomas; eso lo maneja el prompt.
+GUARDRAILS = {
+    "version": "1",
+    "focus": {"is_enabled": True},
+    "prompt_injection": {"is_enabled": True},
+    "content": {"config": {k: {"is_enabled": True, "threshold": "medium"}
+                           for k in ("sexual", "violence", "harassment", "self_harm")}},
+    "custom": {"config": {"configs": [{
+        "name": "sin_datos_de_pago",
+        # Acotado a propósito: la 1.ª versión ("datos sensibles") cortaba la llamada al pedir DNI (ver evals).
+        "prompt": ("Bloquear SOLO si el agente pide, repite o confirma un número de tarjeta de crédito o débito, "
+                   "un CBU/CVU, un código de seguridad (CVV) o una contraseña. Pedir o repetir DNI, fecha de "
+                   "nacimiento, código de seguimiento, número de turno o de cuenta es normal: NO bloquear."),
+        "is_enabled": True,
+    }]}},
+}
 
 CHANNEL_PROMPT = """Canal: llamada de voz con {empresa}.
 conversation_id: {{{{system__conversation_id}}}}
@@ -62,6 +80,7 @@ def build_config(domain, secret_id: str, kb_doc: dict) -> dict:
                                         for k, v in (meta.get("criterios_evaluacion") or {}).items()]},
             "data_collection": {k: {"type": "string", "description": v}
                                 for k, v in (meta.get("datos_a_recolectar") or {}).items()},
+            "guardrails": GUARDRAILS,
         },
     }
 
@@ -91,11 +110,15 @@ def main() -> None:
             return export(http, args.domain, agent_id)
 
         api_key = os.getenv("OPSVOICE_API_KEY") or sys.exit("Falta OPSVOICE_API_KEY en el .env")
-        secret = check(http.post("/v1/convai/secrets",
-                                 json={"type": "new", "name": f"opsvoice-{args.domain}-api-key", "value": api_key}))
+        previous = json.loads(export_path.read_text(encoding="utf-8")) if export_path.exists() else {}
+        secret_id = (previous.get("conversation_config", {}).get("agent", {}).get("prompt", {})
+                     .get("custom_llm", {}) or {}).get("api_key", {}).get("secret_id")
+        if not secret_id:  # al actualizar se reutiliza el secret; se crea solo la primera vez
+            secret_id = check(http.post("/v1/convai/secrets", json={
+                "type": "new", "name": f"opsvoice-{args.domain}-api-key", "value": api_key}))["secret_id"]
         kb_doc = check(http.post("/v1/convai/knowledge-base/text",
                                  json={"name": f"KB {domain.meta['empresa']}", "text": domain.knowledge_base}))
-        config = build_config(domain, secret["secret_id"], kb_doc)
+        config = build_config(domain, secret_id, kb_doc)
 
         if agent_id:
             check(http.patch(f"/v1/convai/agents/{agent_id}", json=config))

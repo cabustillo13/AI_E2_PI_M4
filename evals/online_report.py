@@ -56,7 +56,10 @@ def main() -> None:
              f"- Conversaciones: **{len(convs)}**",
              f"- Resolución (evaluación post-llamada = success): **{resueltas}/{len(convs)}**"
              + (f" ({resueltas / len(convs):.0%})" if convs else ""),
-             f"- Duración promedio: {minutos:.1f} min · p95: {p95_dur / 60:.1f} min", "",
+             f"- Duración promedio: {minutos:.1f} min · p95: {p95_dur / 60:.1f} min",
+             *(["", "> Sin llamadas reales todavía (las simulaciones de la testing suite no cuentan como "
+                "conversaciones): el costo de voz y telefonía queda en 0 hasta que haya llamadas."] if not convs else []),
+             "",
              "## Técnico (backend)", "",
              f"- TTFT p50 / p95: {backend['ttft_ms']['p50']} / {backend['ttft_ms']['p95']} ms",
              f"- Turno completo p50 / p95: {backend['turno_ms']['p50']} / {backend['turno_ms']['p95']} ms",

@@ -21,8 +21,8 @@ No hace falta LangGraph: el loop del agente es un loop de tools simple (M3 · cl
    público (*Settings → Networking → Generate domain*) y copiarlo en `PUBLIC_URL`.
 3. `python elevenlabs/sync_agent.py <dominio>` (con el `PUBLIC_URL` de ese servicio).
 4. En el dashboard de ElevenLabs, sobre el agente creado:
-   - **Security → Guardrails**: activar los de contenido y prompt injection, y agregar un guardrail
-     custom: *"El agente nunca pide ni repite números de tarjeta, CBU, claves o códigos de seguridad."*
+   - Los guardrails (foco, prompt injection, contenido y uno custom de datos de pago) ya los configura el
+     script. Si agregás uno custom, acotalo: uno genérico de "datos sensibles" corta la llamada al pedir DNI.
    - Probar con el widget web (botón *Test AI agent*).
    - Volver a exportar: `python elevenlabs/sync_agent.py <dominio> --export`.
 5. `python elevenlabs/setup_phone.py <dominio>` → copiar `ELEVENLABS_PHONE_NUMBER_ID` y el
@@ -31,6 +31,8 @@ No hace falta LangGraph: el loop del agente es un loop de tools simple (M3 · cl
 
 ## Notas sobre Twilio (importante para la defensa)
 
+- La pantalla *Try it out → Make a voice call* usa un número de Twilio de demo: **no se puede importar** en
+  ElevenLabs. Hace falta un número propio en *Phone Numbers → Active numbers* (con trial sin saldo no se puede comprar).
 - Con cuenta **trial** solo se puede llamar a/desde **números verificados** y Twilio reproduce un aviso
   antes de cada llamada. Para la defensa conviene cargar saldo (USD 20 alcanza) y comprar un número de
   EE. UU. (~USD 1,15/mes): los números argentinos exigen documentación regulatoria.
