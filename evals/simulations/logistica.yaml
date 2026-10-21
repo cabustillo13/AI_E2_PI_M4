@@ -1,0 +1,14 @@
+# Conversaciones simuladas con la testing suite de ElevenLabs (ver evals/simulations/clinica.yaml)
+max_turnos: 12
+
+escenarios:
+  - id: sim_estado_en_transito
+    escenario: "Sos Carlos Díaz, DNI 33444555. Tu código es RL-100234. Querés saber cuándo llega tu paquete."
+    exito: ["El agente informó que el envío está en tránsito y la fecha estimada de entrega."]
+
+  - id: sim_reprogramar_fallida
+    escenario: "Sos Ana Torres, DNI 29888777, código RL-100235. No estabas cuando fueron a entregar. Querés que vuelvan pasado mañana a la tarde."
+    exito: ["El agente reprogramó la entrega y confirmó fecha y franja horaria."]
+
+
+  # TODO [C21]: completar hasta ≥ 10 escenarios (consigna): flujo feliz, errores del usuario, políticas, intentos de jailbreak.

@@ -1,0 +1,16 @@
+# Runtime
+fastapi==0.156.4
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+pydantic==2.14.1
+pyyaml==6.0.3
+python-dotenv==1.2.4
+httpx==0.28.1
+openai==3.35.1
+anthropic==1.17.0
+mcp==1.30.0          # 1.x: misma API (FastMCP / ClientSession) que se vio en M3
+langfuse==4.18.0
+
+# Dev / evals
+pytest==9.1.1
+pillow==12.3.0       # solo para generar las imágenes de muestra

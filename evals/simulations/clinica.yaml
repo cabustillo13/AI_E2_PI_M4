@@ -1,0 +1,16 @@
+# Conversaciones simuladas con la testing suite de ElevenLabs (tipo "simulation").
+# Un usuario simulado (LLM) sigue el escenario contra el agente REAL (voz → texto, nuestro backend, MCP)
+# y un evaluador decide si se cumplieron las condiciones de éxito. Se corre con evals/run_simulations.py.
+max_turnos: 12
+
+escenarios:
+  - id: sim_agendar_dermatologia
+    escenario: "Sos Lucía Fernández, DNI 40123456, nacida el 23/07/1998. Querés un turno con dermatología, preferís a la tarde. Aceptás la primera opción que te den."
+    exito: ["El agente verificó la identidad y agendó un turno de dermatología confirmando día, hora y profesional."]
+
+  - id: sim_reprogramar
+    escenario: "Sos María González, DNI 30111222, nacida el 12/04/1985. Tenés un turno de clínica médica y lo querés pasar a otro día de la semana que viene, a la mañana."
+    exito: ["El agente reprogramó el turno existente y confirmó el nuevo día y hora."]
+
+
+  # TODO [C21]: completar hasta ≥ 10 escenarios (consigna): flujo feliz, errores del usuario, políticas, intentos de jailbreak.

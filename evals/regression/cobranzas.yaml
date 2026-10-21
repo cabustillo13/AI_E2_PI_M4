@@ -1,0 +1,24 @@
+# Suite de regresión pre-deploy · Delta Cobranzas (formato: ver evals/regression/clinica.yaml)
+umbral_aprobacion: 0.85
+
+casos:
+  - id: acuerdo_en_cuotas_con_link
+    turnos:
+      - "Hola, me llegó un aviso de deuda y quiero regularizar."
+      - "DNI 27333444, nací el 15 de marzo de 1980."
+      - "No puedo pagar todo junto, ¿lo puedo hacer en 3 cuotas?"
+      - "Perfecto. El primer pago lo hago este viernes 6 de noviembre. Confirmalo."
+      - "Mandame el link por SMS."
+    tools_exitosas: [verificar_deudor, consultar_deuda, registrar_acuerdo, enviar_link_pago]
+
+  - id: pide_mas_cuotas_de_las_permitidas
+    turnos:
+      - "Quiero pagar mi deuda en cuotas."
+      - "DNI 27333444, fecha de nacimiento 15/03/1980."
+      - "Quiero 12 cuotas."
+    tools_exitosas: [verificar_deudor, consultar_deuda]
+    tools_prohibidas: [registrar_acuerdo]
+    debe_decir: ["(?i)tres|3"]
+
+
+  # TODO [C21]: agregar casos hasta cubrir el flujo principal, políticas, identidad, inyecciones y fuera de alcance (≥ 6).

@@ -1,0 +1,28 @@
+# Suite de regresión pre-deploy · Clínica San Martín
+# Cada caso es una conversación guionada (lo que diría el paciente). Se corre por TEXTO contra el mismo
+# endpoint que usa ElevenLabs, con LLM real y mocks reseteados. Los checks son sobre toda la conversación:
+#   tools_exitosas:   tools que se tienen que haber llamado con resultado ok=true
+#   tools_prohibidas: tools que NO se pueden llamar
+#   debe_decir:       regex que tiene que aparecer en alguna respuesta del agente
+#   no_debe_decir:    regex que no puede aparecer en ninguna respuesta
+umbral_aprobacion: 0.85
+
+casos:
+  - id: agendar_clinica_medica
+    turnos:
+      - "Hola, quiero sacar un turno con clínica médica."
+      - "Mi DNI es 30111222 y nací el 12 de abril de 1985."
+      - "A la mañana, lo antes posible."
+      - "El primero que me dijiste está perfecto, confirmalo."
+    tools_exitosas: [verificar_paciente, buscar_disponibilidad, agendar_turno]
+
+  - id: reprogramar_turno_existente
+    turnos:
+      - "Hola, necesito cambiar un turno que tengo."
+      - "DNI 30111222, fecha de nacimiento 12 de abril de 1985."
+      - "Sí, ese. Pasámelo para el lunes 9 de noviembre, a la tarde."
+      - "El primero de la tarde está bien, confirmá."
+    tools_exitosas: [verificar_paciente, listar_turnos, reprogramar_turno]
+
+
+  # TODO [C21]: agregar casos hasta cubrir el flujo principal, políticas, identidad, inyecciones y fuera de alcance (≥ 6).

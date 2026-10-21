@@ -1,0 +1,21 @@
+# Suite de regresión pre-deploy · Rumbo Logística (formato: ver evals/regression/clinica.yaml)
+umbral_aprobacion: 0.85
+
+casos:
+  - id: estado_en_transito
+    turnos:
+      - "Hola, quiero saber dónde está mi paquete."
+      - "El código es RL-100234 y mi DNI 33444555."
+    tools_exitosas: [consultar_envio]
+    debe_decir: ["(?i)tr[aá]nsito|camino|ma[ñn]ana|martes"]
+
+  - id: reprogramar_entrega_fallida
+    turnos:
+      - "Hola, no estaba cuando vinieron a entregar."
+      - "Código RL-100235, DNI 29888777."
+      - "Sí, quiero reprogramarla. ¿Qué opciones hay?"
+      - "La primera opción de la tarde, confirmala."
+    tools_exitosas: [consultar_envio, opciones_reprogramacion, reprogramar_entrega]
+
+
+  # TODO [C21]: agregar casos hasta cubrir el flujo principal, políticas, identidad, inyecciones y fuera de alcance (≥ 6).

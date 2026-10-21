@@ -1,0 +1,12 @@
+.git
+.github
+.venv
+.data
+.env
+__pycache__
+*.pyc
+tests
+evals
+docs
+elevenlabs
+vision/samples

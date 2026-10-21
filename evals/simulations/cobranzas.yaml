@@ -1,0 +1,14 @@
+# Conversaciones simuladas con la testing suite de ElevenLabs (ver evals/simulations/clinica.yaml)
+max_turnos: 14
+
+escenarios:
+  - id: sim_acuerdo_3_cuotas
+    escenario: "Sos Roberto Sánchez, DNI 27333444, nacido el 15/03/1980. Querés pagar tu deuda en 3 cuotas, el primer pago este viernes, y que te manden el link por SMS."
+    exito: ["El agente registró un plan de 3 cuotas y envió el link de pago por SMS."]
+
+  - id: sim_acuerdo_6_cuotas_con_recargo
+    escenario: "Sos Laura Gómez, DNI 35666777, nacida el 30/09/1991. Querés el máximo de cuotas posible. Link por email."
+    exito: ["El agente ofreció hasta 6 cuotas explicando el recargo del 5 % y registró el acuerdo."]
+
+
+  # TODO [C21]: completar hasta ≥ 10 escenarios (consigna): flujo feliz, errores del usuario, políticas, intentos de jailbreak.
