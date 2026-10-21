@@ -2,7 +2,6 @@
 
     POST /v1/chat/completions   ← ElevenLabs Agents (Custom LLM) · streaming SSE compatible con OpenAI
     POST /vision                ← subida del documento del dominio → JSON validado
-    POST /calls/outbound        ← dispara una llamada saliente (campañas de cobranzas)
     GET  /metrics               ← latencia p50/p95, costo por conversación, eventos del harness
     GET  /health                ← healthcheck de Railway
 
@@ -19,7 +18,6 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-import httpx
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -185,30 +183,3 @@ async def vision(request: Request, referencia: str = Form(..., description="DNI 
                                       archivo.content_type)
     except VisionError as e:
         raise HTTPException(422, str(e)) from e
-
-
-# ─────────────────────────────── Llamada saliente ───────────────────────────────
-
-
-class OutboundCall(BaseModel):
-    to_number: str
-    dynamic_variables: dict = {}
-
-
-@app.post("/calls/outbound", dependencies=[Depends(require_api_key)])
-async def outbound_call(call: OutboundCall):
-    """ElevenLabs llama por Twilio al número indicado con este agente (p. ej. campaña de mora)."""
-    if not (settings.elevenlabs_api_key and settings.elevenlabs_agent_id and settings.elevenlabs_phone_number_id):
-        raise HTTPException(500, "Faltan ELEVENLABS_API_KEY / ELEVENLABS_AGENT_ID / ELEVENLABS_PHONE_NUMBER_ID")
-    async with httpx.AsyncClient(timeout=20) as client:
-        resp = await client.post(
-            "https://api.elevenlabs.io/v1/convai/twilio/outbound-call",
-            headers={"xi-api-key": settings.elevenlabs_api_key},
-            json={"agent_id": settings.elevenlabs_agent_id,
-                  "agent_phone_number_id": settings.elevenlabs_phone_number_id,
-                  "to_number": call.to_number,
-                  "conversation_initiation_client_data": {"dynamic_variables": call.dynamic_variables}},
-        )
-    if resp.status_code >= 400:
-        raise HTTPException(502, f"ElevenLabs respondió {resp.status_code}: {resp.text[:300]}")
-    return resp.json()

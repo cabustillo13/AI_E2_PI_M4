@@ -22,7 +22,7 @@ from src.llm.pricing import cost_usd
 from src.llm.providers import LLMError, LLMResult, TextDelta
 from src.mcp_client import MCPToolbox
 from src.memory import ConversationStore, merge_history
-from src.observability import log_generation, log_tool, metrics, trace_turn
+from src.observability import TurnTrace, metrics
 
 log = logging.getLogger(__name__)
 
@@ -96,7 +96,8 @@ class Agent:
             spoken.update(text=prev + text, new_call=False)
             return TextDelta(text)
 
-        with trace_turn(cid, self.domain.id, last_user):
+        trace = TurnTrace(cid, self.domain.id, last_user)
+        try:
             if self.budget.state(cid) == BudgetState.EXHAUSTED:
                 # Presupuesto agotado: mensaje fijo, sin gastar un token más.
                 metrics.counters["presupuesto_agotado"] += 1
@@ -131,8 +132,8 @@ class Agent:
                     self.budget.add(cid, cost)
                     summary.cost_usd += cost
                     summary.models.append(f"{result.provider}:{result.model}")
-                    log_generation(result.model, history, result.text, result.tool_calls,
-                                   {"input": result.input_tokens, "output": result.output_tokens}, cost)
+                    trace.generation(result.model, history, result.text, result.tool_calls,
+                                     {"input": result.input_tokens, "output": result.output_tokens}, cost)
                     history.append(result.assistant_message())
                     if not result.tool_calls:
                         break
@@ -152,7 +153,7 @@ class Agent:
                             log.exception("Falla ejecutando la tool %s", name)
                             metrics.counters["error_de_tool"] += 1
                             output = json.dumps({"ok": False, "error": "El sistema no respondió, probá de nuevo"})
-                        log_tool(name, args, output)
+                        trace.tool(name, args, output)
                         summary.tool_calls.append({"name": name, "arguments": args, "result": output})
                         history.append({"role": "tool", "tool_call_id": tc["id"], "content": output})
                     if platform_calls:
@@ -163,6 +164,9 @@ class Agent:
                     metrics.counters["tope_de_iteraciones"] += 1
                     yield speak(MSG_TOO_MANY_STEPS)
                     history.append({"role": "assistant", "content": MSG_TOO_MANY_STEPS})
+
+        finally:
+            trace.end(spoken["text"])
 
         self.memory.save(cid, history)
         metrics.turn_ms.append((time.perf_counter() - start) * 1000)

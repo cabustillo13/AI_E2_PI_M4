@@ -14,6 +14,8 @@ sys.path.insert(0, str(ROOT))
 # Fecha fija y datos aislados para todos los tests (antes de importar código del proyecto).
 os.environ["OPSVOICE_TODAY"] = "2026-11-02"  # lunes
 os.environ.setdefault("OPSVOICE_API_KEY", "test-key")
+# Los tests no mandan trazas a Langfuse aunque el .env tenga claves.
+os.environ["LANGFUSE_PUBLIC_KEY"] = os.environ["LANGFUSE_SECRET_KEY"] = ""
 
 
 @pytest.fixture(autouse=True)
