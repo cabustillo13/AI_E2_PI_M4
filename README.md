@@ -43,13 +43,12 @@ uvicorn src.main:app --reload                            # http://localhost:8000
 
 ## 4. Arquitectura propuesta
 
-```
-📞/🌐 → ElevenLabs Agents (STT, TTS, turnos, telefonía, guardrails)
-           │  Custom LLM (OpenAI-compatible, streaming SSE)
-           ▼
-        Tu backend FastAPI (Railway): guardrails → LLM con fallback ⇄ tools MCP → texto en streaming
-           │                                   └── stdio ──► mcp_server (mocks del negocio)
-           └──► Langfuse (trazas, costo, latencia)
+```mermaid
+flowchart LR
+    canal["📞 Teléfono / 🌐 Web"] --> EL["ElevenLabs Agents: STT, TTS, turnos, telefonía, guardrails"]
+    EL <-->|"Custom LLM · OpenAI-compatible · SSE"| BE["Tu backend FastAPI en Railway: guardrails → LLM con fallback ⇄ tools"]
+    BE <-->|"MCP · stdio"| MCP[("mcp_server: mocks del negocio")]
+    BE --> LF["Langfuse: trazas, costo, latencia"]
 ```
 
 El razonamiento vive en **tu backend**: por eso el harness, las trazas y la suite de regresión son

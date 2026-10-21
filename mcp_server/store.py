@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from contextlib import contextmanager
 from datetime import date, datetime, time
 from pathlib import Path
@@ -30,6 +31,24 @@ def now() -> datetime:
     if os.getenv("OPSVOICE_TODAY"):
         return datetime.combine(today(), time(8, 0))
     return datetime.now()
+
+
+DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre",
+         "octubre", "noviembre", "diciembre"]
+
+
+def fecha_legible(iso: str) -> str:
+    """'2026-11-04T10:00' → 'miércoles 4 de noviembre a las 10:00'. Los LLM se equivocan calculando el día
+    de la semana: por eso las tools devuelven la fecha ya escrita como se dice en voz alta."""
+    d = datetime.fromisoformat(iso) if "T" in iso else datetime.combine(date.fromisoformat(iso), time())
+    texto = f"{DIAS[d.weekday()]} {d.day} de {MESES[d.month - 1]}"
+    return f"{texto} a las {d:%H:%M}" if "T" in iso else texto
+
+
+def solo_digitos(valor: str) -> str:
+    """'30.111.222' / '30 111 222' → '30111222'. Por voz y por LLM los datos llegan con formatos variados."""
+    return re.sub(r"\D", "", valor or "")
 
 
 def _path(domain: str) -> Path:

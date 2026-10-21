@@ -68,8 +68,9 @@ def test_no_reprogramar_envio_en_transito_ni_fuera_de_opciones():
 
 
 def test_remito_no_expone_dni_completo():
-    resp = logistica.consultar_remito("RL-100236")
+    resp = logistica.consultar_remito("RL-100236", "31222333")
     assert resp["receptor_dni_final"] == "666" and "14555666" not in str(resp)
+    assert not logistica.consultar_remito("RL-100236", "11111111")["ok"]  # sin DNI correcto, nada
 
 
 # ─────────────── Cobranzas ───────────────
@@ -98,3 +99,14 @@ def test_acuerdo_y_link():
 
 def test_acuerdo_fecha_fuera_de_rango():
     assert not cobranzas.registrar_acuerdo("C-5001", 1, "2026-12-01")["ok"]
+
+
+def test_normaliza_codigos_y_dni_dictados():
+    assert logistica.consultar_envio("RL100234", "33.444.555")["ok"]
+    assert logistica.consultar_envio("r l 100234", "33 444 555")["ok"]
+    assert clinica.verificar_paciente("30.111.222", "1985-04-12")["ok"]
+
+
+def test_fechas_legibles_con_dia_correcto():
+    turno = clinica.listar_turnos("30111222")["turnos"][0]
+    assert turno["cuando"] == "miércoles 4 de noviembre a las 10:00"  # 2026-11-04 es miércoles

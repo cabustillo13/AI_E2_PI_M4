@@ -76,8 +76,13 @@ def _data() -> dict:
     return store.load(DOMAIN, seed)
 
 
+def _codigo(codigo: str) -> str:
+    """'RL100234', 'rl-100234', 'R L 100234' → 'RL-100234'."""
+    return f"RL-{store.solo_digitos(codigo)}"
+
+
 def _verificar(envio: dict | None, dni: str) -> str | None:
-    if not envio or envio["dni"] != dni.strip():
+    if not envio or envio["dni"] != store.solo_digitos(dni):
         return "No encontramos un envío con ese código y DNI."
     return None
 
@@ -87,11 +92,13 @@ def _verificar(envio: dict | None, dni: str) -> str | None:
 
 def consultar_envio(codigo_seguimiento: str, dni_destinatario: str) -> dict:
     """Estado de un envío. Requiere código (RL-XXXXXX) y DNI del destinatario."""
-    codigo = codigo_seguimiento.strip().upper()
+    codigo = _codigo(codigo_seguimiento)
     envio = _data()["envios"].get(codigo)
     if error := _verificar(envio, dni_destinatario):
         return {"ok": False, "error": error}
     resp = {k: envio[k] for k in ("destinatario", "estado", "eta", "localidad", "reprogramaciones", "historial")}
+    if envio["eta"]:
+        resp["eta_legible"] = store.fecha_legible(envio["eta"])
     if envio["estado"] == "entrega_fallida":
         resp["motivo_falla"] = envio["motivo_falla"]
     if envio["estado"] == "en_sucursal":
@@ -101,14 +108,14 @@ def consultar_envio(codigo_seguimiento: str, dni_destinatario: str) -> dict:
 
 def opciones_reprogramacion(codigo_seguimiento: str) -> dict:
     """Fechas y franjas disponibles para reprogramar una entrega fallida (próximos 3 días hábiles)."""
-    envio = _data()["envios"].get(codigo_seguimiento.strip().upper())
+    envio = _data()["envios"].get(_codigo(codigo_seguimiento))
     if not envio:
         return {"ok": False, "error": "Envío inexistente."}
     if envio["estado"] != "entrega_fallida":
         return {"ok": False, "error": f"Solo se reprograman entregas fallidas (estado actual: {envio['estado']})."}
     if envio["reprogramaciones"] >= MAX_REPROGRAMACIONES:
         return {"ok": False, "error": "Se alcanzó el máximo de reprogramaciones: ofrecer retiro en sucursal."}
-    opciones = [{"fecha": d.isoformat(), "franja": f, "horario": h}
+    opciones = [{"fecha": d.isoformat(), "dia": store.fecha_legible(d.isoformat()), "franja": f, "horario": h}
                 for d in _dias_habiles(store.today(), 3) for f, h in FRANJAS.items()]
     return {"ok": True, "opciones": opciones}
 
@@ -121,19 +128,23 @@ def reprogramar_entrega(codigo_seguimiento: str, fecha: str, franja: str, nueva_
     if {"fecha": fecha, "franja": franja} not in [{"fecha": o["fecha"], "franja": o["franja"]} for o in opciones["opciones"]]:
         return {"ok": False, "error": "Fecha o franja fuera de las opciones disponibles."}
     with store.edit(DOMAIN, seed) as data:
-        envio = data["envios"][codigo_seguimiento.strip().upper()]
+        envio = data["envios"][_codigo(codigo_seguimiento)]
         envio.update(estado="reprogramado", eta=fecha, franja=franja)
         envio["reprogramaciones"] += 1
         if nueva_direccion:
             envio["direccion"] = nueva_direccion
         envio["historial"].append(f"{store.today().isoformat()}: reprogramado para {fecha} ({FRANJAS[franja]})")
-        return {"ok": True, "fecha": fecha, "franja": franja, "horario": FRANJAS[franja],
+        return {"ok": True, "fecha": fecha, "dia": store.fecha_legible(fecha), "franja": franja, "horario": FRANJAS[franja],
                 "direccion": envio["direccion"]}
 
 
-def consultar_remito(codigo_seguimiento: str) -> dict:
-    """Remito firmado de un envío entregado (subido por el repartidor y procesado con visión)."""
-    doc = _data()["documentos"].get(codigo_seguimiento.strip().upper())
+def consultar_remito(codigo_seguimiento: str, dni_destinatario: str) -> dict:
+    """Remito firmado de un envío entregado (subido por el repartidor y procesado con visión).
+    Requiere el DNI del destinatario, igual que consultar_envio."""
+    data = _data()
+    if error := _verificar(data["envios"].get(_codigo(codigo_seguimiento)), dni_destinatario):
+        return {"ok": False, "error": error}
+    doc = data["documentos"].get(_codigo(codigo_seguimiento))
     if not doc:
         return {"ok": False, "error": "No hay remito cargado para este envío."}
     d = doc["data"]

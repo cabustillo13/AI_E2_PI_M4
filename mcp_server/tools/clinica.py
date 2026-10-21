@@ -83,7 +83,8 @@ def _data() -> dict:
 def _describir_slot(data: dict, slot_id: str) -> dict:
     slot = data["slots"][slot_id]
     prof = next(p for p in PROFESIONALES if p["id"] == slot["profesional_id"])
-    return {"slot_id": slot_id, "inicio": slot["inicio"], "profesional": prof["nombre"], "especialidad": prof["especialidad"]}
+    return {"slot_id": slot_id, "inicio": slot["inicio"], "cuando": store.fecha_legible(slot["inicio"]),
+            "profesional": prof["nombre"], "especialidad": prof["especialidad"]}
 
 
 def _faltan_24h(data: dict, slot_id: str) -> bool:
@@ -97,7 +98,7 @@ def _faltan_24h(data: dict, slot_id: str) -> bool:
 def verificar_paciente(dni: str, fecha_nacimiento: str) -> dict:
     """Verifica la identidad del paciente con DNI y fecha de nacimiento (YYYY-MM-DD).
     Llamar SIEMPRE antes de consultar o modificar turnos."""
-    paciente = _data()["pacientes"].get(dni.strip())
+    paciente = _data()["pacientes"].get(store.solo_digitos(dni))
     if not paciente or paciente["fecha_nacimiento"] != fecha_nacimiento.strip():
         return {"ok": False, "error": "No encontramos un paciente con esos datos."}
     return {"ok": True, "paciente": {"dni": dni, "nombre": paciente["nombre"], "obra_social": paciente["obra_social"]}}
