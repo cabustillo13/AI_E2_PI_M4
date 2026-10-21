@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    # Sin claves: tools, harness, visión y API con LLM falso. Corre en cada push.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t opsvoice .
+      - name: Smoke test del contenedor
+        run: |
+          docker run -d --name ops -p 8000:8000 -e OPSVOICE_API_KEY=ci opsvoice
+          for i in $(seq 1 20); do curl -fs localhost:8000/health && exit 0; sleep 1; done
+          docker logs ops; exit 1
+
+  regression:
+    # Gate pre-deploy con LLM real. Solo en PRs y si el repo tiene el secret OPENAI_API_KEY.
+    runs-on: ubuntu-latest
+    needs: tests
+    if: github.event_name == 'pull_request'
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: [clinica, logistica, cobranzas]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Suite de regresión
+        if: env.OPENAI_API_KEY != ''
+        run: python -m evals.run_regression ${{ matrix.domain }}
+      - uses: actions/upload-artifact@v4
+        if: always() && env.OPENAI_API_KEY != ''
+        with:
+          name: regression-${{ matrix.domain }}
+          path: evals/reports/regression_${{ matrix.domain }}.md

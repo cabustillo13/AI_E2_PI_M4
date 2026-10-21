@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# OpsVoice
+.data/
+.data-*/
+evals/simulations/test_ids_*.json
