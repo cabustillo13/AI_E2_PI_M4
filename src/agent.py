@@ -85,9 +85,15 @@ class Agent:
         self._sanitize(history, summary)
         last_user = next((m["content"] for m in reversed(history) if m["role"] == "user"), "")
 
+        spoken = {"text": "", "new_call": False}
+
         def speak(text: str) -> TextDelta:
             if summary.ttft_ms is None:
                 summary.ttft_ms = (time.perf_counter() - start) * 1000
+            prev = spoken["text"]
+            if spoken["new_call"] and prev and not prev[-1].isspace() and text and not text[0].isspace():
+                text = " " + text  # 2.ª llamada al LLM en el mismo turno: que no queden frases pegadas
+            spoken.update(text=prev + text, new_call=False)
             return TextDelta(text)
 
         with trace_turn(cid, self.domain.id, last_user):
@@ -107,6 +113,7 @@ class Agent:
                     degrade = self.budget.state(cid) == BudgetState.DEGRADED
                     summary.budget_state = self.budget.state(cid).value
                     result: LLMResult | None = None
+                    spoken["new_call"] = True
                     try:
                         async for event in self.router.stream([self._system(ctx), *history], tools, degrade):
                             if isinstance(event, TextDelta):

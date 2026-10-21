@@ -110,3 +110,11 @@ def test_metrics(make_client):
         chat(client, "hola")
         m = client.get("/metrics", headers=AUTH).json()
     assert m["turnos"] >= 1 and m["ttft_ms"]["p95"] is not None
+
+
+def test_no_pega_frases_entre_llamadas_al_llm_ni_separa_tokens(make_client):
+    client, _ = make_client([{"text": "Dame un segundo.", "tools": [tool_call("listar_turnos", dni="30111222")]},
+                             "Tenés un turno el miércoles."])
+    with client:
+        text = chat(client, "¿qué turnos tengo?").json()["choices"][0]["message"]["content"]
+    assert text == "Dame un segundo. Tenés un turno el miércoles. "

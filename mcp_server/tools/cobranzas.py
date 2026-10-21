@@ -67,7 +67,7 @@ def _regla(dias_mora: int) -> dict | None:
 def verificar_deudor(dni: str, fecha_nacimiento: str) -> dict:
     """Verifica la identidad del titular con DNI y fecha de nacimiento (YYYY-MM-DD).
     Llamar SIEMPRE antes de mencionar cualquier dato de la deuda."""
-    deudor = _data()["deudores"].get(dni.strip())
+    deudor = _data()["deudores"].get(store.solo_digitos(dni))
     if not deudor or deudor["fecha_nacimiento"] != fecha_nacimiento.strip():
         return {"ok": False, "error": "Los datos no coinciden con ningún titular."}
     return {"ok": True, "titular": {"dni": dni, "nombre": deudor["nombre"], "cuentas": deudor["cuentas"]}}
@@ -76,7 +76,7 @@ def verificar_deudor(dni: str, fecha_nacimiento: str) -> dict:
 def consultar_deuda(dni: str) -> dict:
     """Deuda vigente del titular verificado: cuentas, montos y días de mora."""
     data = _data()
-    deudor = data["deudores"].get(dni.strip())
+    deudor = data["deudores"].get(store.solo_digitos(dni))
     if not deudor:
         return {"ok": False, "error": "Titular inexistente."}
     cuentas = [{"cuenta_id": cid, **data["cuentas"][cid]} for cid in deudor["cuentas"]]

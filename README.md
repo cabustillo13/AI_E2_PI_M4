@@ -1,6 +1,5 @@
 # OpsVoice — Agente de operaciones voice-first
 
-Solución de referencia del **Proyecto Integrador M4 · AI Engineering 2.0 (Henry)**.
 Un agente que atiende por **voz (web y teléfono)** una operación real del negocio, usa las herramientas
 del negocio vía **MCP**, procesa un documento con **visión** y corre en **producción** con harness y evals.
 
@@ -16,23 +15,28 @@ Un solo código, tres dominios. El dominio se elige con una variable de entorno:
 
 ## 1. Arquitectura
 
-```
-                 ┌──────────────────────── ElevenLabs Agents ────────────────────────┐
- 📞 Teléfono ──► │ Twilio (nativo) ─┐                                                 │
- 🌐 Widget web ─►│                  ├─► STT ─► turnos ─► TTS        guardrails,      │
-                 │                  │          │  ▲                 KB, evaluación   │
-                 └──────────────────┼──────────┼──┼─────────────────────────────────┘
-                                    │  Custom LLM (OpenAI-compatible, SSE)
-                                    ▼          ▼  │
- ┌──────────────────────────── Backend OpsVoice (FastAPI · Railway) ──────────────────────────┐
- │  POST /v1/chat/completions                                                                │
- │    guardrails (tarjetas/CBU fuera) → memoria de la conversación → presupuesto USD         │
- │    → LLM router (fallback OpenAI → Anthropic, modelo barato al 70 % del presupuesto)       │
- │    ⇄ loop de tools (máx. 5 vueltas) ⇄ cliente MCP ──stdio──► mcp_server (mocks del negocio)│
- │  POST /vision  → modelo de visión → Pydantic + reglas de negocio → relectura si falla     │
- │  POST /calls/outbound (cobranzas) · GET /metrics · GET /health · POST /admin/reset        │
- └──────────────┬─────────────────────────────────────────────────────────────────────────────┘
-                └──► Langfuse (trazas por conversación, costo, latencia; PII enmascarada)
+```mermaid
+flowchart TB
+    tel["📞 Teléfono"] --> twilio
+    web["🌐 Widget web"] --> stt
+
+    subgraph EL["ElevenLabs Agents"]
+        twilio["Twilio (integración nativa)"] --> stt["STT → turnos → TTS"]
+        plat["Guardrails · Knowledge base · Evaluación post-llamada"]
+    end
+
+    stt <-->|"Custom LLM · OpenAI-compatible · SSE"| chat
+
+    subgraph BE["Backend OpsVoice · FastAPI en Railway"]
+        chat["POST /v1/chat/completions"] --> harness["Guardrails → memoria → presupuesto USD"]
+        harness --> router["LLM router: fallback de modelos y modelo barato al 70 % del presupuesto"]
+        router <--> loop["Loop de tools (máx. 5 vueltas)"]
+        loop <-->|"MCP · stdio"| mcp[("mcp_server: mocks del negocio")]
+        vision["POST /vision: visión → Pydantic + reglas → relectura"] --> mcp
+        otros["POST /calls/outbound · GET /metrics · GET /health · POST /admin/reset"]
+    end
+
+    BE --> langfuse["Langfuse: trazas, costo, latencia (PII enmascarada)"]
 ```
 
 **Decisión central: el "cerebro" vive en el backend.** ElevenLabs se encarga de la voz (STT, TTS,

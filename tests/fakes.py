@@ -14,7 +14,7 @@ def tool_call(name: str, **arguments) -> dict:
 
 class FakeProvider:
     """Cada llamada a stream() consume el siguiente paso del guion.
-    Un paso es: str (texto) | list[dict] (tool calls) | Exception | ("lento", segundos)."""
+    Un paso es: str (texto) | list[dict] (tool calls) | {"text", "tools"} | Exception | ("lento", segundos)."""
 
     def __init__(self, script: list, name: str = "fake", model: str = "gpt-4.1-mini"):
         self.script = list(script)
@@ -32,6 +32,12 @@ class FakeProvider:
         if isinstance(step, tuple) and step[0] == "corta":  # habla y después falla
             yield TextDelta(step[1])
             raise LLMError("se cortó el stream")
+        if isinstance(step, dict):  # texto + tool calls en la misma respuesta
+            for word in step["text"].split(" "):
+                yield TextDelta(word + " " if word != step["text"].split(" ")[-1] else word)
+            yield LLMResult(provider=self.name, model=self.model, text=step["text"], tool_calls=step["tools"],
+                            input_tokens=1000, output_tokens=50)
+            return
         if isinstance(step, list):
             yield LLMResult(provider=self.name, model=self.model, tool_calls=step, input_tokens=1000, output_tokens=50)
             return
