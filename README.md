@@ -16,28 +16,21 @@ Un solo código, tres dominios. El dominio se elige con una variable de entorno:
 ## 1. Arquitectura
 
 ```mermaid
-flowchart TB
-    tel["📞 Teléfono"] --> twilio
-    web["🌐 Widget web"] --> stt
-
-    subgraph EL["ElevenLabs Agents"]
-        twilio["Twilio (integración nativa)"] --> stt["STT → turnos → TTS"]
-        plat["Guardrails · Knowledge base · Evaluación post-llamada"]
-    end
-
-    stt <-->|"Custom LLM · OpenAI-compatible · SSE"| chat
-
-    subgraph BE["Backend OpsVoice · FastAPI en Railway"]
-        chat["POST /v1/chat/completions"] --> harness["Guardrails → memoria → presupuesto USD"]
-        harness --> router["LLM router: fallback de modelos y modelo barato al 70 % del presupuesto"]
-        router <--> loop["Loop de tools (máx. 5 vueltas)"]
-        loop <-->|"MCP · stdio"| mcp[("mcp_server: mocks del negocio")]
-        vision["POST /vision: visión → Pydantic + reglas → relectura"] --> mcp
-        otros["POST /calls/outbound · GET /metrics · GET /health · POST /admin/reset"]
-    end
-
-    BE --> langfuse["Langfuse: trazas, costo, latencia (PII enmascarada)"]
+flowchart LR
+    canal["📞 Teléfono<br/>🌐 Widget web"] --> EL["ElevenLabs Agents<br/>STT · TTS · telefonía<br/>guardrails · KB"]
+    EL <-->|"Custom LLM<br/>SSE"| BE["Backend FastAPI<br/>harness · loop de tools"]
+    BE <-->|"MCP stdio"| MCP[("Mocks del<br/>negocio")]
+    VIS["POST /vision"] --> MCP
+    BE --> LF["Langfuse"]
 ```
+
+- **`POST /v1/chat/completions`** — lo llama ElevenLabs en cada turno: guardrails (tarjetas/CBU fuera) →
+  memoria de la conversación → presupuesto USD → router de LLMs (fallback y modelo barato al 70 %) ⇄
+  loop de tools MCP (máx. 5 vueltas) → texto en streaming.
+- **`POST /vision`** — documento → modelo de visión → Pydantic + reglas de negocio → relectura si falla;
+  el resultado lo consultan las tools durante la llamada.
+- **`POST /calls/outbound`** (cobranzas) · **`GET /metrics`** · **`GET /health`** · **`POST /admin/reset`**.
+- **Langfuse** — trazas por conversación con costo y latencia (PII enmascarada).
 
 **Decisión central: el "cerebro" vive en el backend.** ElevenLabs se encarga de la voz (STT, TTS,
 turnos, telefonía, guardrails de plataforma) y le delega el razonamiento a nuestro endpoint con su
