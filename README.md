@@ -107,7 +107,7 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 | **Guardrail de tarjetas/CBU antes del LLM** | "El LLM nunca toca datos de pago" se cumple aunque el prompt falle (Luhn + largo de CBU). |
 | **Guardrails de plataforma acotados** | El custom de ElevenLabs bloquea solo tarjeta/CBU/CVV/claves: uno genérico de "datos sensibles" corta la conversación cuando el agente pide el DNI. |
 | **Visión: structured output + reglas + 1 relectura** | Pydantic garantiza la forma; las reglas (CUIT, totales, vigencia, firma) detectan errores de contenido; la relectura dirigida corrige lecturas malas; si persiste → `requiere_revision`, nunca se "arregla" a mano. Texto con instrucciones dentro del documento → campo `texto_sospechoso` → revisión. |
-| **Trazas con spans explícitos** | Cada turno corre dentro del streaming SSE; los spans de Langfuse se crean y cierran explícitamente para que se exporten. |
+| **Trazas con spans explícitos y sin contexto heredado** | Cada turno corre dentro del streaming SSE: los spans de Langfuse se crean y cierran explícitamente. La telemetría propia de FastAPI está apagada porque ElevenLabs manda `traceparent` con sampled=00 y los spans heredarían el "no muestrear". |
 | **Un worker, estado en memoria** | Suficiente para el alcance. Escalar = mover memoria y presupuesto a Redis (mismo contrato). |
 | **Modelos** | `gpt-4.1-mini` primario (baja latencia, sin razonamiento extendido: clave en voz), fallback configurable (`LLM_CHAIN`, otro modelo u otro proveedor) y `gpt-4.1-nano` como modelo barato. |
 

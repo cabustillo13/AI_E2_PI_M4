@@ -139,3 +139,10 @@ def test_demo_sin_agente_configurado(make_client, monkeypatch):
     client, _ = make_client(["hola"])
     with client:
         assert client.get("/demo").status_code == 503
+
+
+def test_fastapi_no_hereda_el_traceparent_de_elevenlabs():
+    # ElevenLabs manda traceparent con sampled=00: si FastAPI lo usa, Langfuse no exporta nada.
+    import src.main as main
+
+    assert main.app._telemetry["tracing"] is False
