@@ -99,6 +99,11 @@ async def get_metrics() -> dict:
     return {"domain": settings.domain, **metrics.snapshot()}
 
 
+@app.get("/debug/last-request", dependencies=[Depends(require_api_key)])  # DEBUG TEMPORAL
+async def debug_last(request: Request) -> dict:
+    return getattr(request.app.state, "debug_last", {})
+
+
 @app.post("/admin/reset", dependencies=[Depends(require_api_key)])
 async def reset_mocks() -> dict:
     """Vuelve los mocks del negocio a los datos semilla (antes de una demo o de las simulaciones)."""
@@ -137,6 +142,8 @@ def _chunk(cid: str, delta: dict, finish: str | None = None) -> str:
 @app.post("/v1/chat/completions", dependencies=[Depends(require_api_key)])
 async def chat_completions(body: ChatRequest, request: Request):
     cid = conversation_id(body, request)
+    request.app.state.debug_last = {"headers": {k: v for k, v in request.headers.items() if k != "authorization"},
+                                     "body": body.model_dump()}  # DEBUG TEMPORAL
     if not request.app.state.limiter.allow(cid):
         metrics.counters["rate_limited"] += 1
         raise HTTPException(429, "Demasiadas solicitudes para esta conversación")
