@@ -2,6 +2,7 @@
 
     POST /v1/chat/completions   ← ElevenLabs Agents (Custom LLM) · streaming SSE compatible con OpenAI
     POST /vision                ← subida del documento del dominio → JSON validado
+    GET  /demo                  ← página pública para hablar con el agente (widget de voz)
     GET  /metrics               ← latencia p50/p95, costo por conversación, eventos del harness
     GET  /health                ← healthcheck de Railway
 
@@ -19,13 +20,14 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict
 
 from mcp_server import store
 from src.agent import Agent, ToolCallsOut, TurnContext, TurnSummary
 from src.config import settings
+from src.demo import render as render_demo
 from src.domain import load_domain
 from src.harness.budget import BudgetTracker
 from src.harness.rate_limit import RateLimiter
@@ -82,6 +84,14 @@ async def unhandled(request: Request, exc: Exception) -> JSONResponse:
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok", "domain": settings.domain}
+
+
+@app.get("/demo", response_class=HTMLResponse)
+async def demo(request: Request, campana: bool = False) -> str:
+    """Página pública para hablar con el agente desde el navegador (widget de ElevenLabs)."""
+    if not settings.elevenlabs_agent_id:
+        raise HTTPException(503, "Falta ELEVENLABS_AGENT_ID: creá el agente con elevenlabs/sync_agent.py")
+    return render_demo(request.app.state.domain, settings.elevenlabs_agent_id, campana)
 
 
 @app.get("/metrics", dependencies=[Depends(require_api_key)])

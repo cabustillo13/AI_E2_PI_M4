@@ -34,6 +34,8 @@ class Settings:
     rate_limit_per_minute: int = field(default_factory=lambda: int(_env("RATE_LIMIT_PER_MINUTE", "30")))
     budget_degrade_ratio: float = field(default_factory=lambda: float(_env("BUDGET_DEGRADE_RATIO", "0.7")))
 
+    # Agente de ElevenLabs que se embebe en la demo pública (GET /demo)
+    elevenlabs_agent_id: str = field(default_factory=lambda: _env("ELEVENLABS_AGENT_ID"))
 
 
 settings = Settings()

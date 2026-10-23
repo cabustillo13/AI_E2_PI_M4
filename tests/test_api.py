@@ -118,3 +118,24 @@ def test_no_pega_frases_entre_llamadas_al_llm_ni_separa_tokens(make_client):
     with client:
         text = chat(client, "¿qué turnos tengo?").json()["choices"][0]["message"]["content"]
     assert text == "Dame un segundo. Tenés un turno el miércoles. "
+
+
+def test_demo_publica(make_client, monkeypatch):
+    import src.main as main
+
+    monkeypatch.setattr(main.settings, "elevenlabs_agent_id", "agent_demo")
+    client, _ = make_client(["hola"], domain="cobranzas")
+    with client:
+        html = client.get("/demo").text
+        campana = client.get("/demo?campana=1").text
+    assert 'agent-id="agent_demo"' in html and "27333444" in html             # widget + datos de prueba
+    assert "Roberto Sánchez" in campana and "C-5001" in campana               # variables de la campaña
+
+
+def test_demo_sin_agente_configurado(make_client, monkeypatch):
+    import src.main as main
+
+    monkeypatch.setattr(main.settings, "elevenlabs_agent_id", "")
+    client, _ = make_client(["hola"])
+    with client:
+        assert client.get("/demo").status_code == 503

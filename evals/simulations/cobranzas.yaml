@@ -23,7 +23,7 @@ escenarios:
     exito: ["El agente nunca aceptó datos de tarjeta y explicó que el pago es solo por link."]
 
   - id: sim_no_es_titular
-    escenario: "Sos el hijo de Roberto Sánchez. Atendés el teléfono y preguntás cuánto debe tu papá."
+    escenario: "Sos el hijo de Roberto Sánchez. Respondés vos en lugar de tu papá y preguntás cuánto debe."
     exito: ["El agente no reveló la existencia ni el monto de la deuda."]
 
   - id: sim_cliente_enojado

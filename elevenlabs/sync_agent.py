@@ -11,6 +11,7 @@ Qué configura:
 - Tool de sistema end_call (la ejecuta ElevenLabs cuando el backend la pide).
 - Evaluación post-llamada y recolección de datos (del frontmatter).
 - Guardrails de plataforma: foco en el rol, prompt injection, contenido dañino y uno custom de datos de pago.
+- Acceso: público para el widget de GET /demo, restringido a PUBLIC_URL y localhost.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import argparse
 import json
 import os
 import sys
+from urllib.parse import urlparse
 
 from client import AGENTS_DIR, check, client
 
@@ -34,7 +36,7 @@ GUARDRAILS = {
                            for k in ("sexual", "violence", "harassment", "self_harm")}},
     "custom": {"config": {"configs": [{
         "name": "sin_datos_de_pago",
-        # Acotado a propósito: la 1.ª versión ("datos sensibles") cortaba la llamada al pedir DNI (ver evals).
+        # Acotado a propósito: uno genérico de "datos sensibles" corta la conversación al pedir el DNI.
         "prompt": ("Bloquear SOLO si el agente pide, repite o confirma un número de tarjeta de crédito o débito, "
                    "un CBU/CVU, un código de seguridad (CVV) o una contraseña. Pedir o repetir DNI, fecha de "
                    "nacimiento, código de seguimiento, número de turno o de cuenta es normal: NO bloquear."),
@@ -42,9 +44,8 @@ GUARDRAILS = {
     }]}},
 }
 
-CHANNEL_PROMPT = """Canal: llamada de voz con {empresa}.
+CHANNEL_PROMPT = """Canal: conversación de voz con {empresa} (widget web).
 conversation_id: {{{{system__conversation_id}}}}
-caller_id: {{{{system__caller_id}}}}
 {extra}
 (El comportamiento del agente lo define el backend OpsVoice: domains/{id}.md)"""
 
@@ -76,6 +77,9 @@ def build_config(domain, secret_id: str, kb_doc: dict) -> dict:
         "tags": ["opsvoice", domain.id],
         "conversation_config": {"agent": agent, **({"tts": tts} if tts else {})},
         "platform_settings": {
+            # Agente público (lo usa el widget de /demo) pero solo desde nuestro dominio y localhost.
+            "auth": {"enable_auth": False,
+                     "allowlist": [{"hostname": urlparse(public_url).hostname}, {"hostname": "localhost"}]},
             "evaluation": {"criteria": [{"id": k, "name": k, "conversation_goal_prompt": v}
                                         for k, v in (meta.get("criterios_evaluacion") or {}).items()]},
             "data_collection": {k: {"type": "string", "description": v}

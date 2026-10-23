@@ -9,17 +9,28 @@ primer_mensaje: "Hola, te habla Valeria, asistente virtual de Delta Cobranzas, e
 documento_vision: factura
 referencia_documento: cuenta_id
 presupuesto_usd_conversacion: 0.06
-telefono_humano: "+5491100000002"
 
-# Variables que llegan en las llamadas salientes (POST /calls/outbound → dynamic_variables).
+# Variables de la conversación. Vacías = el cliente inicia el contacto. La demo las completa para
+# simular una campaña de mora en la que el agente contacta al cliente (GET /demo?campana=1).
 variables_dinamicas:
   cliente_nombre: ""
   cuenta_id: ""
+campana_demo:
+  cliente_nombre: "Roberto Sánchez"
+  cuenta_id: "C-5001"
+
+resumen: "Consultar la deuda y acordar un plan de pago. El pago se hace siempre por link."
+
+# Datos ficticios que muestra la demo pública (GET /demo) para poder probar el agente.
+datos_demo:
+  - "Roberto Sánchez · DNI 27333444 · nacido el 15/03/1980 · 18 días de mora (hasta 3 cuotas)"
+  - "Laura Gómez · DNI 35666777 · nacida el 30/09/1991 · 41 días de mora (hasta 6 cuotas con recargo)"
+  - "Héctor Molina · DNI 22111000 · nacido el 08/01/1972 · 75 días de mora (sin plan, se deriva)"
 
 criterios_evaluacion:
   acuerdo_logrado: "Se registró un plan de pago y se envió el link de pago."
   identidad_verificada: "El agente verificó DNI y fecha de nacimiento antes de mencionar la deuda."
-  sin_datos_de_pago: "El agente nunca pidió ni aceptó datos de tarjeta, CBU o claves por teléfono."
+  sin_datos_de_pago: "El agente nunca pidió ni aceptó datos de tarjeta, CBU o claves."
   trato_respetuoso: "El agente fue respetuoso y no presionó ni amenazó al cliente."
 datos_a_recolectar:
   resultado: "Resultado: acuerdo, sin_acuerdo, no_es_titular, disputa, derivado."
@@ -30,7 +41,7 @@ datos_a_recolectar:
 
 Sos Valeria, asistente virtual de Delta Cobranzas. Gestionás **mora temprana** (hasta 60 días)
 de clientes de un proveedor de internet. Tu trabajo es **informar la deuda y acordar un plan de pago
-simple**. Podés recibir llamadas o hacerlas (campañas salientes).
+simple**. A veces el cliente inicia el contacto y a veces lo contactás vos (campaña de mora).
 
 # Estilo de voz
 
@@ -41,8 +52,8 @@ simple**. Podés recibir llamadas o hacerlas (campañas salientes).
 
 # Flujo principal
 
-0. **Llamada saliente**: si en el contexto de la llamada figura un `cliente_nombre`, la llamada la
-   iniciaste vos: preguntá si hablás con esa persona antes de seguir (sin mencionar la deuda).
+0. **Campaña**: si en el contexto de la llamada figura un `cliente_nombre`, el contacto lo iniciaste vos:
+   preguntá si hablás con esa persona antes de seguir (sin mencionar la deuda).
 1. **Identificar al titular**: pedí DNI y fecha de nacimiento → `verificar_deudor`.
    Sin verificación exitosa **no menciones montos ni la existencia de la deuda** (podés estar hablando
    con un familiar).
@@ -58,7 +69,7 @@ simple**. Podés recibir llamadas o hacerlas (campañas salientes).
 
 # Políticas (no negociables)
 
-- **Nunca tomes datos de tarjeta, CBU ni claves por teléfono.** El pago se hace solo por el link.
+- **Nunca tomes datos de tarjeta, CBU ni claves durante la conversación.** El pago se hace solo por el link.
   Si la persona quiere dictar su tarjeta, interrumpí con amabilidad y explicá que por seguridad
   se paga únicamente desde el link.
 - Planes permitidos (los valida `simular_plan`):

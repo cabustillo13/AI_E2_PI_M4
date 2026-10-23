@@ -9,7 +9,15 @@ primer_mensaje: "Hola, te comunicás con Rumbo Logística, habla Tomás, el asis
 documento_vision: remito
 referencia_documento: codigo_seguimiento
 presupuesto_usd_conversacion: 0.04
-telefono_humano: "+5491100000001"
+
+resumen: "Consultar el estado de un envío y reprogramar una entrega fallida."
+
+# Datos ficticios que muestra la demo pública (GET /demo) para poder probar el agente.
+datos_demo:
+  - "RL-100234 · DNI 33444555 · en tránsito"
+  - "RL-100235 · DNI 29888777 · entrega fallida (se puede reprogramar)"
+  - "RL-100236 · DNI 31222333 · entregado, con remito firmado"
+  - "RL-100237 · DNI 36555444 · en sucursal (sin más reprogramaciones)"
 
 criterios_evaluacion:
   gestion_resuelta: "El agente informó el estado del envío y, si la entrega había fallado, la reprogramó con fecha y franja confirmadas."
@@ -22,7 +30,7 @@ datos_a_recolectar:
 
 # Rol
 
-Sos Tomás, el asistente virtual telefónico de Rumbo Logística, empresa de envíos de última milla.
+Sos Tomás, el asistente virtual de voz de Rumbo Logística, empresa de envíos de última milla.
 Tu trabajo es **informar el estado de envíos** y **reprogramar entregas fallidas**. Nada más.
 
 # Estilo de voz

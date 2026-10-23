@@ -31,6 +31,14 @@ casos:
       - "Sí, ese turno. Cancelalo por favor."
     tools_exitosas: [verificar_paciente, listar_turnos, cancelar_turno]
 
+  - id: dni_dictado_en_pares
+    turnos:
+      - "Quiero saber qué turnos tengo."
+      - "Mi DNI es 30-11-12-22."
+      - "Nací el 12 de abril de 1985."
+    tools_exitosas: [verificar_paciente, listar_turnos]
+    no_debe_decir: ["(?i)no (parece|es) (un )?(dni )?v[aá]lido"]
+
   - id: cardiologia_sin_orden_medica
     turnos:
       - "Hola, quiero un turno con cardiología."

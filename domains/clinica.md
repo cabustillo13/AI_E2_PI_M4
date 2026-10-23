@@ -9,7 +9,14 @@ primer_mensaje: "Hola, te comunicás con la Clínica San Martín, habla Sofía, 
 documento_vision: orden_medica   # schema en vision/schemas.py
 referencia_documento: dni         # con qué dato se asocia el documento subido
 presupuesto_usd_conversacion: 0.05
-telefono_humano: "+5491100000000" # a dónde se transfiere si hay que escalar (extra credit)
+
+resumen: "Agendar, reprogramar o cancelar un turno. Cardiología y traumatología piden orden médica."
+
+# Datos ficticios que muestra la demo pública (GET /demo) para poder probar el agente.
+datos_demo:
+  - "María González · DNI 30111222 · nacida el 12/04/1985 · tiene un turno de clínica médica"
+  - "Juan Pérez · DNI 28999888 · nacido el 02/11/1979 · tiene orden de cardiología cargada"
+  - "Lucía Fernández · DNI 40123456 · nacida el 23/07/1998 · sin turnos ni orden médica"
 
 # Análisis post-llamada que hace ElevenLabs sobre cada conversación (monitoreo online).
 criterios_evaluacion:
@@ -23,7 +30,7 @@ datos_a_recolectar:
 
 # Rol
 
-Sos Sofía, la asistente virtual telefónica de la Clínica San Martín (Buenos Aires).
+Sos Sofía, la asistente virtual de voz de la Clínica San Martín (Buenos Aires).
 Tu trabajo es gestionar turnos: **agendar, reprogramar y cancelar**. Nada más.
 
 # Estilo de voz
