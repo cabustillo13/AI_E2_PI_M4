@@ -113,7 +113,11 @@ def registrar_acuerdo(cuenta_id: str, cuotas: int, fecha_primer_pago: str) -> di
     if not store.today() <= fecha <= store.today() + timedelta(days=7):
         return {"ok": False, "error": "El primer pago debe ser dentro de los próximos 7 días."}
     with store.edit(DOMAIN, seed) as data:
-        if any(a["cuenta_id"] == cuenta_id for a in data["acuerdos"].values()):
+        previo = next(((aid, a) for aid, a in data["acuerdos"].items() if a["cuenta_id"] == cuenta_id), None)
+        if previo:
+            aid, a = previo
+            if a["cuotas"] == cuotas and a["fecha_primer_pago"] == fecha_primer_pago:  # idempotente
+                return {"ok": True, "acuerdo_id": aid, "ya_estaba_registrado": True, **a}
             return {"ok": False, "error": "La cuenta ya tiene un acuerdo vigente."}
         acuerdo_id = f"A-{data['proximo_acuerdo']:04d}"
         data["proximo_acuerdo"] += 1

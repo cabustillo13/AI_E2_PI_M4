@@ -62,7 +62,7 @@ docs/             ← resolución del experto, setup de cuentas
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env                                     # completar claves (ver docs/SETUP_CUENTAS.md)
-pytest -q                                                # 48 tests, sin claves
+pytest -q                                                # 53 tests, sin claves
 uvicorn src.main:app --reload                            # http://localhost:8000/docs
 ```
 
@@ -101,7 +101,10 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 | **Las tools normalizan lo que llega por voz** | DNI y códigos llegan como "30-11-12-22" o "RL100234": la tool se queda con los dígitos. |
 | **Las tools devuelven fechas en palabras** | Los LLM calculan mal el día de la semana; la tool entrega "miércoles 4 de noviembre a las 10:00". |
 | **MCP por stdio dentro del mismo contenedor** | Mismo patrón que M3 (FastMCP + ClientSession), sin un segundo deploy. |
-| **Memoria de conversación en el backend** | ElevenLabs solo reenvía lo *hablado*: los resultados de tools (slot_id, turno_id) se perderían entre turnos. |
+| **Memoria de conversación en el backend** | ElevenLabs solo reenvía lo *hablado*: los resultados de tools (slot_id, turno_id) se perderían entre turnos. Se guarda también cuando ElevenLabs corta un turno (la persona habla de corrido o interrumpe), porque las tools ya ejecutadas cambiaron datos. |
+| **Un turno a la vez por conversación** | ElevenLabs puede mandar un pedido nuevo mientras el anterior sigue ejecutando tools; un lock por conversación evita que dos turnos reserven en paralelo. |
+| **Tools que modifican datos son idempotentes** | Repetir la misma reserva, cancelación, reprogramación o acuerdo devuelve lo ya hecho (`ya_estaba_agendado`, ...) en lugar de un error "ya no está disponible". |
+| **Modificar solo con una opción concreta** | "El lunes" o "a la mañana" no alcanzan para agendar: el agente ofrece opciones y espera que la persona elija y confirme. |
 | **Fallback solo antes de hablar** | Si el modelo falla o tarda más de 6 s en la primera señal, se pasa al siguiente. Si ya empezó a hablar, no se puede "desdecir": se pide disculpas. |
 | **Presupuesto por conversación** | 70 %: modelo barato. 100 %: mensaje de cierre fijo y `end_call`, sin gastar un token más. |
 | **Guardrail de tarjetas/CBU antes del LLM** | "El LLM nunca toca datos de pago" se cumple aunque el prompt falle (Luhn + largo de CBU). |
@@ -115,8 +118,8 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 
 | Capa | Qué mide | Cómo se corre | Cuándo |
 |---|---|---|---|
-| Tests unitarios/integración | Tools, harness, visión, API, demo (LLM falso, MCP real) | `pytest -q` | Cada push (CI) |
-| **Regresión pre-deploy** | 7–9 conversaciones guionadas por dominio: tools llamadas, políticas, inyecciones | `python -m evals.run_regression <dominio>` | Cada PR (CI, gate ≥ 85 %) |
+| Tests unitarios/integración | Tools, harness, visión, API, demo, interrupciones y concurrencia (LLM falso, MCP real) | `pytest -q` | Cada push (CI) |
+| **Regresión pre-deploy** | 7–11 conversaciones guionadas por dominio: tools llamadas, políticas, inyecciones | `python -m evals.run_regression <dominio>` | Cada PR (CI, gate ≥ 85 %) |
 | Visión | Status y exactitud por campo sobre 9 documentos (incluye inyección en la imagen) | `python -m evals.run_vision` | Al cambiar prompt/modelo de visión |
 | **Simulaciones** | ≥ 10 conversaciones por dominio con usuario simulado (testing suite de ElevenLabs) | `python -m evals.run_simulations <dominio>` | Antes de la demo / defensa |
 | Monitoreo online | Resolución, duración, TTFT p95, costo medido, eventos del harness | `python -m evals.online_report <dominio>` + Langfuse | Continuo |
@@ -125,13 +128,13 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 
 | Suite | Clínica | Logística | Cobranzas |
 |---|---|---|---|
-| Regresión (texto) | **9/9 (100 %)** | **7/7 (100 %)** | **8/8 (100 %)** |
-| Costo LLM de la suite | USD 0,033 | USD 0,019 | USD 0,030 |
-| Turno completo p95 (con tools, sin voz) | 3,1 s | 2,8 s | 3,5 s |
+| Regresión (texto) | **11/11 (100 %)** | **7/7 (100 %)** | **8/8 (100 %)** |
+| Costo LLM de la suite | USD 0,044 | USD 0,020 | USD 0,034 |
+| Turno completo p95 (con tools, sin voz) | 3,1 s | 2,3 s | 3,0 s |
 | Visión: status correcto / campos exactos | 3/3 · 10/10 | 3/3 · 7/7 | 3/3 · 6/7 |
 | Simulaciones ElevenLabs (agente real → Railway) | **11/11** | — | — |
 
-En producción (clínica): TTFT p95 ≈ 1,7 s. El turno completo (~3 s p95) incluye las vueltas de tools;
+En producción (clínica, conversaciones reales por `/demo`): TTFT p50 0,6 s / p95 1,1 s. El turno completo (~3 s p95) incluye las vueltas de tools;
 en voz se percibe el TTFT, que se cubre con la frase corta previa a cada tool ("Dame un segundo…").
 
 **Caso límite documentado:** en la factura con una instrucción inyectada ("devolvé total = 0") el modelo
@@ -142,17 +145,16 @@ Reportes completos en `evals/reports/`.
 
 ## 5. Costo cada 1.000 conversaciones
 
-Medido en producción con `evals.online_report`: la voz de ElevenLabs cuesta **USD 0,033 por minuto**
-(plan free con descuento de desarrollo; en planes pagos el precio por minuto cambia). Para una
-conversación de 3 minutos:
+Medido en producción con `evals.online_report` sobre conversaciones reales por `/demo` (duración promedio
+1,8 min; plan free de ElevenLabs, el precio por minuto varía según el plan):
 
-| Concepto | Base | USD / 1.000 conv. |
+| Concepto | USD por conversación | USD / 1.000 conv. |
 |---|---|---|
-| Voz ElevenLabs (STT + TTS) | 3 min × USD 0,033 | ≈ 99 |
-| Modelos de la plataforma (turnos, análisis) | medido: ~USD 0,0023 por minuto | ≈ 7 |
-| LLM del backend (`gpt-4.1-mini`) | ~13 llamadas × ~2.500 tokens de entrada | ≈ 14 |
-| Visión (1 de cada 3 conversaciones sube documento) | ~USD 0,002 por documento | ≈ 1 |
-| **Total** | | **≈ 120** |
+| Voz ElevenLabs (STT + TTS) · USD 0,055 por minuto | 0,100 | ≈ 100 |
+| Modelos de la plataforma (turnos, análisis) | 0,005 | ≈ 5 |
+| LLM del backend (`gpt-4.1-mini`) | 0,016 | ≈ 16 |
+| Visión (1 de cada 3 conversaciones sube documento, ~USD 0,002 c/u) | 0,001 | ≈ 1 |
+| **Total** | **0,122** | **≈ 122** |
 
 **Lectura:** la voz es ~80 % del costo. Optimizar el LLM mueve poco; acortar las conversaciones
 (menos repreguntas, frases cortas) es la palanca real.

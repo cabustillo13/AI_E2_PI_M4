@@ -8,9 +8,11 @@ presupuesto, fallback, tope de iteraciones, guardrails y trazas.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import AsyncIterator
 
@@ -28,6 +30,8 @@ log = logging.getLogger(__name__)
 
 MSG_BUDGET = "Para seguir con tu gestión te voy a derivar con una persona del equipo. Gracias por comunicarte."
 MSG_TOO_MANY_STEPS = "Perdón, no estoy pudiendo resolverlo. Te sugiero comunicarte con una persona del equipo."
+INTERRUPTED_TOOL = json.dumps({"ok": False, "error": "La operación se interrumpió y no se sabe si se completó: "
+                                                      "consultá el estado antes de repetirla."}, ensure_ascii=False)
 MSG_ALL_FAILED = "Disculpá, estoy con un problema técnico. Por favor volvé a llamar en unos minutos."
 
 
@@ -64,6 +68,9 @@ class Agent:
         self.budget = budget
         self.memory = memory
         self.max_tool_iterations = max_tool_iterations
+        # Un turno a la vez por conversación: ElevenLabs puede mandar un pedido nuevo mientras el anterior
+        # sigue ejecutando tools (cuando la persona habla de corrido o interrumpe).
+        self._locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
     def _system(self, ctx: TurnContext) -> dict:
         prompt = self.domain.system_prompt()
@@ -77,105 +84,117 @@ class Agent:
                 m["content"], hit = sanitize_user_text(m["content"])
                 summary.guardrail_hits += int(hit)
 
+    def _close_pending_tool_calls(self, history: list[dict]) -> None:
+        """Si el turno se cortó con tools del MCP sin resultado, se cierran: el LLM exige un resultado por llamada."""
+        answered = {m["tool_call_id"] for m in history if m["role"] == "tool"}
+        for m in [m for m in history if m["role"] == "assistant" and m.get("tool_calls")]:
+            for tc in m["tool_calls"]:
+                if tc["id"] not in answered and tc["function"]["name"] in self.toolbox.names:
+                    history.append({"role": "tool", "tool_call_id": tc["id"], "content": INTERRUPTED_TOOL})
+
     async def run(self, incoming: list[dict], ctx: TurnContext) -> AsyncIterator[TextDelta | ToolCallsOut | TurnSummary]:
         cid = ctx.conversation_id
         start = time.perf_counter()
         summary = TurnSummary(conversation_id=cid)
-        history = merge_history(self.memory.get(cid), incoming)
-        self._sanitize(history, summary)
-        last_user = next((m["content"] for m in reversed(history) if m["role"] == "user"), "")
+        async with self._locks[cid]:
+            history = merge_history(self.memory.get(cid), incoming)
+            self._sanitize(history, summary)
+            last_user = next((m["content"] for m in reversed(history) if m["role"] == "user"), "")
 
-        spoken = {"text": "", "new_call": False}
+            spoken = {"text": "", "new_call": False}
 
-        def speak(text: str) -> TextDelta:
-            if summary.ttft_ms is None:
-                summary.ttft_ms = (time.perf_counter() - start) * 1000
-            prev = spoken["text"]
-            if spoken["new_call"] and prev and not prev[-1].isspace() and text and not text[0].isspace():
-                text = " " + text  # 2.ª llamada al LLM en el mismo turno: que no queden frases pegadas
-            spoken.update(text=prev + text, new_call=False)
-            return TextDelta(text)
+            def speak(text: str) -> TextDelta:
+                if summary.ttft_ms is None:
+                    summary.ttft_ms = (time.perf_counter() - start) * 1000
+                prev = spoken["text"]
+                if spoken["new_call"] and prev and not prev[-1].isspace() and text and not text[0].isspace():
+                    text = " " + text  # 2.ª llamada al LLM en el mismo turno: que no queden frases pegadas
+                spoken.update(text=prev + text, new_call=False)
+                return TextDelta(text)
 
-        trace = TurnTrace(cid, self.domain.id, last_user)
-        try:
-            if self.budget.state(cid) == BudgetState.EXHAUSTED:
-                # Presupuesto agotado: mensaje fijo, sin gastar un token más.
-                metrics.counters["presupuesto_agotado"] += 1
-                summary.budget_state = BudgetState.EXHAUSTED.value
-                yield speak(MSG_BUDGET)
-                history.append({"role": "assistant", "content": MSG_BUDGET})
-                end_call = [t for t in ctx.platform_tools if t["function"]["name"] == "end_call"]
-                if end_call:
-                    yield ToolCallsOut([{"id": f"call_budget_{len(history)}", "type": "function",
-                                         "function": {"name": "end_call", "arguments": "{}"}}])
-            else:
-                tools = self.toolbox.openai_tools + ctx.platform_tools
-                for _ in range(self.max_tool_iterations):
-                    degrade = self.budget.state(cid) == BudgetState.DEGRADED
-                    summary.budget_state = self.budget.state(cid).value
-                    result: LLMResult | None = None
-                    spoken["new_call"] = True
-                    try:
-                        async for event in self.router.stream([self._system(ctx), *history], tools, degrade):
-                            if isinstance(event, TextDelta):
-                                yield speak(event.text)
-                            else:
-                                result = event
-                    except LLMError as e:
-                        log.error("Sin modelos disponibles: %s", e)
-                        metrics.counters["todos_los_modelos_fallaron"] += 1
-                        yield speak(MSG_ALL_FAILED)
-                        history.append({"role": "assistant", "content": MSG_ALL_FAILED})
-                        break
-
-                    cost = cost_usd(result.model, result.input_tokens, result.output_tokens)
-                    self.budget.add(cid, cost)
-                    summary.cost_usd += cost
-                    summary.models.append(f"{result.provider}:{result.model}")
-                    trace.generation(result.model, history, result.text, result.tool_calls,
-                                     {"input": result.input_tokens, "output": result.output_tokens}, cost)
-                    history.append(result.assistant_message())
-                    if not result.tool_calls:
-                        break
-
-                    platform_calls = []
-                    for tc in result.tool_calls:
-                        name = tc["function"]["name"]
-                        if name not in self.toolbox.names:
-                            platform_calls.append(tc)
-                            continue
-                        try:
-                            args = json.loads(tc["function"]["arguments"] or "{}")
-                            output = await self.toolbox.call(name, args)
-                        except json.JSONDecodeError:
-                            args, output = {}, json.dumps({"ok": False, "error": "Argumentos no son JSON válido"})
-                        except Exception:  # en voz no se puede cortar el stream: el LLM explica el error
-                            log.exception("Falla ejecutando la tool %s", name)
-                            metrics.counters["error_de_tool"] += 1
-                            output = json.dumps({"ok": False, "error": "El sistema no respondió, probá de nuevo"})
-                        trace.tool(name, args, output)
-                        summary.tool_calls.append({"name": name, "arguments": args, "result": output})
-                        history.append({"role": "tool", "tool_call_id": tc["id"], "content": output})
-                    if platform_calls:
-                        yield ToolCallsOut(platform_calls)
-                        break
+            trace = TurnTrace(cid, self.domain.id, last_user)
+            try:
+                if self.budget.state(cid) == BudgetState.EXHAUSTED:
+                    # Presupuesto agotado: mensaje fijo, sin gastar un token más.
+                    metrics.counters["presupuesto_agotado"] += 1
+                    summary.budget_state = BudgetState.EXHAUSTED.value
+                    yield speak(MSG_BUDGET)
+                    history.append({"role": "assistant", "content": MSG_BUDGET})
+                    end_call = [t for t in ctx.platform_tools if t["function"]["name"] == "end_call"]
+                    if end_call:
+                        yield ToolCallsOut([{"id": f"call_budget_{len(history)}", "type": "function",
+                                             "function": {"name": "end_call", "arguments": "{}"}}])
                 else:
-                    # Stopping rule: demasiadas vueltas de tools sin respuesta final.
-                    metrics.counters["tope_de_iteraciones"] += 1
-                    yield speak(MSG_TOO_MANY_STEPS)
-                    history.append({"role": "assistant", "content": MSG_TOO_MANY_STEPS})
+                    tools = self.toolbox.openai_tools + ctx.platform_tools
+                    for _ in range(self.max_tool_iterations):
+                        degrade = self.budget.state(cid) == BudgetState.DEGRADED
+                        summary.budget_state = self.budget.state(cid).value
+                        result: LLMResult | None = None
+                        spoken["new_call"] = True
+                        try:
+                            async for event in self.router.stream([self._system(ctx), *history], tools, degrade):
+                                if isinstance(event, TextDelta):
+                                    yield speak(event.text)
+                                else:
+                                    result = event
+                        except LLMError as e:
+                            log.error("Sin modelos disponibles: %s", e)
+                            metrics.counters["todos_los_modelos_fallaron"] += 1
+                            yield speak(MSG_ALL_FAILED)
+                            history.append({"role": "assistant", "content": MSG_ALL_FAILED})
+                            break
 
-        finally:
-            trace.end(spoken["text"])
+                        cost = cost_usd(result.model, result.input_tokens, result.output_tokens)
+                        self.budget.add(cid, cost)
+                        summary.cost_usd += cost
+                        summary.models.append(f"{result.provider}:{result.model}")
+                        trace.generation(result.model, history, result.text, result.tool_calls,
+                                         {"input": result.input_tokens, "output": result.output_tokens}, cost)
+                        history.append(result.assistant_message())
+                        if not result.tool_calls:
+                            break
 
-        self.memory.save(cid, history)
-        metrics.turn_ms.append((time.perf_counter() - start) * 1000)
-        if summary.ttft_ms is not None:
-            metrics.ttft_ms.append(summary.ttft_ms)
-        metrics.cost_by_conversation[cid] = self.budget.spent(cid)
-        if cid not in metrics.last_sessions:
-            metrics.last_sessions.append(cid)
-        metrics.counters["guardrail_dato_sensible"] += summary.guardrail_hits
-        if summary.budget_state == BudgetState.DEGRADED.value:
-            metrics.counters["turnos_con_modelo_barato"] += 1
-        yield summary
+                        platform_calls = []
+                        for tc in result.tool_calls:
+                            name = tc["function"]["name"]
+                            if name not in self.toolbox.names:
+                                platform_calls.append(tc)
+                                continue
+                            try:
+                                args = json.loads(tc["function"]["arguments"] or "{}")
+                                output = await self.toolbox.call(name, args)
+                            except json.JSONDecodeError:
+                                args, output = {}, json.dumps({"ok": False, "error": "Argumentos no son JSON válido"})
+                            except Exception:  # en voz no se puede cortar el stream: el LLM explica el error
+                                log.exception("Falla ejecutando la tool %s", name)
+                                metrics.counters["error_de_tool"] += 1
+                                output = json.dumps({"ok": False, "error": "El sistema no respondió, probá de nuevo"})
+                            trace.tool(name, args, output)
+                            summary.tool_calls.append({"name": name, "arguments": args, "result": output})
+                            history.append({"role": "tool", "tool_call_id": tc["id"], "content": output})
+                        if platform_calls:
+                            yield ToolCallsOut(platform_calls)
+                            break
+                    else:
+                        # Stopping rule: demasiadas vueltas de tools sin respuesta final.
+                        metrics.counters["tope_de_iteraciones"] += 1
+                        yield speak(MSG_TOO_MANY_STEPS)
+                        history.append({"role": "assistant", "content": MSG_TOO_MANY_STEPS})
+
+            finally:
+                # Se guarda aunque el turno se corte (interrupción): si una tool ya reservó un turno,
+                # el siguiente pedido tiene que saberlo para no volver a reservarlo.
+                self._close_pending_tool_calls(history)
+                self.memory.save(cid, history)
+                trace.end(spoken["text"])
+
+            metrics.turn_ms.append((time.perf_counter() - start) * 1000)
+            if summary.ttft_ms is not None:
+                metrics.ttft_ms.append(summary.ttft_ms)
+            metrics.cost_by_conversation[cid] = self.budget.spent(cid)
+            if cid not in metrics.last_sessions:
+                metrics.last_sessions.append(cid)
+            metrics.counters["guardrail_dato_sensible"] += summary.guardrail_hits
+            if summary.budget_state == BudgetState.DEGRADED.value:
+                metrics.counters["turnos_con_modelo_barato"] += 1
+            yield summary

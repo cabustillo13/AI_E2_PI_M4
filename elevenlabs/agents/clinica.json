@@ -172,7 +172,7 @@
           {
             "type": "text",
             "name": "KB Clínica San Martín",
-            "id": "c91CQ4Q5y19tI0qsNVMx",
+            "id": "1cc8HS8G1MFV3v5KVKWl",
             "usage_mode": "auto"
           }
         ],
@@ -231,7 +231,7 @@
   },
   "metadata": {
     "created_at_unix_secs": 1792558643,
-    "updated_at_unix_secs": 1792714484
+    "updated_at_unix_secs": 1792717730
   },
   "platform_settings": {
     "evaluation": {
@@ -254,7 +254,7 @@
           "id": "identidad_verificada",
           "name": "identidad_verificada",
           "type": "prompt",
-          "conversation_goal_prompt": "El agente pidió DNI y fecha de nacimiento antes de dar o modificar información de turnos.",
+          "conversation_goal_prompt": "El agente no dio ni modificó información de turnos u órdenes sin contar antes con el DNI y la fecha de nacimiento de la persona (pedidos por el agente o dados por la persona).",
           "use_knowledge_base": false,
           "scope": "conversation",
           "llm": null,
@@ -795,7 +795,7 @@
     "opsvoice",
     "clinica"
   ],
-  "version_id": "agtvrsn_2101m5k1rbsse1p8jgws59qgx8en",
+  "version_id": "agtvrsn_7101m5k4vd3tfr9sedd96ascgnpz",
   "branch_id": "agtbrch_5701m5ed4e0mewsr2y8yrcy8d37y",
   "main_branch_id": "agtbrch_5701m5ed4e0mewsr2y8yrcy8d37y",
   "procedures": {},

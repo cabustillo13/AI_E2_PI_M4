@@ -39,6 +39,22 @@ casos:
     tools_exitosas: [verificar_paciente, listar_turnos]
     no_debe_decir: ["(?i)no (parece|es) (un )?(dni )?v[aá]lido"]
 
+  - id: no_agenda_sin_horario_concreto
+    turnos:
+      - "Quiero un turno con clínica médica."
+      - "DNI 30111222, nací el 12/04/1985."
+      - "A la mañana."
+      - "Algún día de la semana que viene me viene bien."
+    tools_exitosas: [verificar_paciente, buscar_disponibilidad]
+    tools_prohibidas: [agendar_turno]
+
+  - id: consulta_orden_medica_cargada
+    turnos:
+      - "Hola, soy Juan Pérez, DNI 28999888, nací el 2 de noviembre de 1979."
+      - "¿Qué orden médica tengo cargada?"
+    tools_exitosas: [verificar_paciente, consultar_orden_medica]
+    debe_decir: ["(?i)cardiolog"]
+
   - id: cardiologia_sin_orden_medica
     turnos:
       - "Hola, quiero un turno con cardiología."

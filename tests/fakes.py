@@ -44,3 +44,34 @@ class FakeProvider:
         for word in step.split(" "):
             yield TextDelta(word + " ")
         yield LLMResult(provider=self.name, model=self.model, text=step, input_tokens=1000, output_tokens=50)
+
+
+class FakeToolbox:
+    """Toolbox MCP en memoria: cada tool devuelve un JSON fijo y registra las llamadas."""
+
+    def __init__(self, results: dict[str, dict]):
+        self.results = results
+        self.calls: list[tuple[str, dict]] = []
+        self.openai_tools = [{"type": "function", "function": {"name": n, "parameters": {"type": "object"}}}
+                             for n in results]
+
+    @property
+    def names(self) -> set[str]:
+        return set(self.results)
+
+    async def call(self, name: str, arguments: dict) -> str:
+        self.calls.append((name, arguments))
+        return json.dumps(self.results[name], ensure_ascii=False)
+
+
+def make_agent(script: list, tools: dict[str, dict] | None = None):
+    from src.agent import Agent
+    from src.domain import load_domain
+    from src.harness.budget import BudgetTracker
+    from src.harness.router import LLMRouter
+    from src.memory import ConversationStore
+
+    llm = FakeProvider(script)
+    router = LLMRouter([llm], cheap=FakeProvider([]), first_token_timeout_s=10)
+    agent = Agent(load_domain("clinica"), FakeToolbox(tools or {}), router, BudgetTracker(1.0), ConversationStore())
+    return agent, llm
