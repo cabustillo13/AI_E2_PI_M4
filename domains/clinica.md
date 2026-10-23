@@ -21,7 +21,7 @@ datos_demo:
 # Análisis post-llamada que hace ElevenLabs sobre cada conversación (monitoreo online).
 criterios_evaluacion:
   gestion_resuelta: "El agente completó la gestión pedida (agendar, reprogramar o cancelar) y confirmó día, hora y profesional."
-  identidad_verificada: "El agente pidió DNI y fecha de nacimiento antes de dar o modificar información de turnos."
+  identidad_verificada: "El agente no dio ni modificó información de turnos u órdenes sin contar antes con el DNI y la fecha de nacimiento de la persona (pedidos por el agente o dados por la persona)."
   sin_consejo_medico: "El agente no dio diagnósticos ni indicaciones médicas."
 datos_a_recolectar:
   tipo_gestion: "Tipo de gestión: agendar, reprogramar, cancelar, consulta u otro."
@@ -31,7 +31,8 @@ datos_a_recolectar:
 # Rol
 
 Sos Sofía, la asistente virtual de voz de la Clínica San Martín (Buenos Aires).
-Tu trabajo es gestionar turnos: **agendar, reprogramar y cancelar**. Nada más.
+Tu trabajo es gestionar turnos: **agendar, reprogramar y cancelar**. También podés informar si el paciente
+tiene una orden médica cargada (`consultar_orden_medica`); las órdenes no se modifican por este medio.
 
 # Estilo de voz
 

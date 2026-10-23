@@ -92,7 +92,9 @@ def test_cuota_minima():
 def test_acuerdo_y_link():
     resp = cobranzas.registrar_acuerdo("C-5001", 2, "2026-11-05")
     assert resp["ok"] and resp["link_pago"].startswith(cobranzas.LINK_BASE)
-    assert not cobranzas.registrar_acuerdo("C-5001", 2, "2026-11-05")["ok"]  # ya tiene acuerdo
+    repetido = cobranzas.registrar_acuerdo("C-5001", 2, "2026-11-05")      # misma operación → idempotente
+    assert repetido["ok"] and repetido["ya_estaba_registrado"] and repetido["acuerdo_id"] == resp["acuerdo_id"]
+    assert not cobranzas.registrar_acuerdo("C-5001", 3, "2026-11-05")["ok"]  # otro acuerdo → error
     envio = cobranzas.enviar_link_pago("C-5001", "sms")
     assert envio["ok"] and "****" in envio["destino"]
 
@@ -110,3 +112,18 @@ def test_normaliza_codigos_y_dni_dictados():
 def test_fechas_legibles_con_dia_correcto():
     turno = clinica.listar_turnos("30111222")["turnos"][0]
     assert turno["cuando"] == "miércoles 4 de noviembre a las 10:00"  # 2026-11-04 es miércoles
+
+
+def test_operaciones_repetidas_son_idempotentes():
+    # Por voz un turno puede cortarse y repetirse: repetir la operación no duplica ni da un error engañoso.
+    slot = clinica.buscar_disponibilidad("clinica_medica")["turnos_libres"][0]["slot_id"]
+    primero = clinica.agendar_turno("40123456", slot)
+    segundo = clinica.agendar_turno("40123456", slot)
+    assert segundo["ok"] and segundo["ya_estaba_agendado"] and segundo["turno_id"] == primero["turno_id"]
+    assert len(clinica.listar_turnos("40123456")["turnos"]) == 1
+    assert not clinica.agendar_turno("30111222", slot)["ok"]       # otro paciente: ocupado
+    assert clinica.cancelar_turno(primero["turno_id"])["ok"]
+    assert clinica.cancelar_turno(primero["turno_id"])["ya_estaba_cancelado"]
+    opcion = logistica.opciones_reprogramacion("RL-100235")["opciones"][0]
+    assert logistica.reprogramar_entrega("RL-100235", opcion["fecha"], opcion["franja"])["ok"]
+    assert logistica.reprogramar_entrega("RL-100235", opcion["fecha"], opcion["franja"])["ya_estaba_reprogramado"]

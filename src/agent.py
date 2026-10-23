@@ -45,6 +45,11 @@ class Agent:
              - si hay tool_calls del MCP → ejecutar con self.toolbox.call(name, args) y agregar los
                mensajes {"role": "tool", ...} al historial; volver a llamar al LLM
         5. self.memory.save(cid, history) y registrar métricas / trazas (src/observability.py).
+
+        Ojo con la voz: si la persona habla de corrido o interrumpe, ElevenLabs corta el turno en curso y
+        manda uno nuevo. Pensá qué pasa si la tool ya reservó un turno cuando se corta (¿se guarda la
+        memoria?) y si dos pedidos de la misma conversación pueden correr a la vez (asyncio.Lock).
+        Las tools del MCP ya son idempotentes: repetir una reserva devuelve `ya_estaba_agendado`.
         """
         raise NotImplementedError
         yield  # noqa: (hace que la función sea un async generator)

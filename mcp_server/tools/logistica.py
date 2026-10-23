@@ -122,6 +122,11 @@ def opciones_reprogramacion(codigo_seguimiento: str) -> dict:
 
 def reprogramar_entrega(codigo_seguimiento: str, fecha: str, franja: str, nueva_direccion: str | None = None) -> dict:
     """Reprograma una entrega fallida. franja: 'manana' | 'tarde'. nueva_direccion opcional (misma localidad)."""
+    envio = _data()["envios"].get(_codigo(codigo_seguimiento))
+    if envio and envio["estado"] == "reprogramado" and envio["eta"] == fecha and envio.get("franja") == franja:
+        # idempotente: repetir la misma reprogramación (p. ej. tras una interrupción) no la duplica
+        return {"ok": True, "ya_estaba_reprogramado": True, "fecha": fecha, "dia": store.fecha_legible(fecha),
+                "franja": franja, "horario": FRANJAS[franja], "direccion": envio["direccion"]}
     opciones = opciones_reprogramacion(codigo_seguimiento)
     if not opciones["ok"]:
         return opciones

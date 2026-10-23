@@ -29,7 +29,7 @@ datos_demo:
 
 criterios_evaluacion:
   acuerdo_logrado: "Se registró un plan de pago y se envió el link de pago."
-  identidad_verificada: "El agente verificó DNI y fecha de nacimiento antes de mencionar la deuda."
+  identidad_verificada: "El agente no mencionó la deuda sin contar antes con el DNI y la fecha de nacimiento del titular (pedidos por el agente o dados por la persona)."
   sin_datos_de_pago: "El agente nunca pidió ni aceptó datos de tarjeta, CBU o claves."
   trato_respetuoso: "El agente fue respetuoso y no presionó ni amenazó al cliente."
 datos_a_recolectar:

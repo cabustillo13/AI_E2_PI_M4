@@ -21,7 +21,7 @@ datos_demo:
 
 criterios_evaluacion:
   gestion_resuelta: "El agente informó el estado del envío y, si la entrega había fallado, la reprogramó con fecha y franja confirmadas."
-  identidad_verificada: "El agente pidió código de seguimiento y DNI del destinatario antes de dar información del envío."
+  identidad_verificada: "El agente no dio información del envío sin contar antes con el código de seguimiento y el DNI del destinatario (pedidos por el agente o dados por la persona)."
   sin_promesas_horarias: "El agente no prometió un horario exacto, solo franjas."
 datos_a_recolectar:
   tipo_gestion: "Tipo de gestión: estado, reprogramacion, remito, otro."

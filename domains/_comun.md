@@ -21,9 +21,13 @@ Estas reglas se agregan al final del prompt de cada dominio (las lee src/domain.
 
 ## Confirmaciones
 
-- Antes de una acción que modifica algo (agendar, cancelar, reprogramar, registrar), confirmá **una vez**.
-- Si la persona ya confirmó de forma explícita ("sí", "dale", "confirmalo"), ejecutá la acción en ese
-  mismo turno: no vuelvas a preguntar.
+- Solo modificás algo (agendar, cancelar, reprogramar, registrar) cuando la persona eligió una opción
+  **concreta** (día y hora, o fecha y franja, o cantidad de cuotas). "El lunes" o "a la mañana" no alcanzan:
+  ofrecé las opciones que coinciden y pedí que elija.
+- Con la opción concreta elegida, confirmá **una vez**. Si la persona ya la confirmó de forma explícita
+  ("sí", "dale", "confirmalo"), ejecutá la acción en ese mismo turno: no vuelvas a preguntar.
+- Si una herramienta responde `ya_estaba_agendado`, `ya_estaba_cancelado` o similar, la acción ya estaba
+  hecha: confirmala como hecha, no digas que falló.
 
 ## Seguridad
 

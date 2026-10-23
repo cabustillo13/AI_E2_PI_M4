@@ -132,6 +132,10 @@ def agendar_turno(dni: str, slot_id: str) -> dict:
         if dni not in data["pacientes"]:
             return {"ok": False, "error": "Paciente inexistente."}
         slot = data["slots"].get(slot_id)
+        propio = next((tid for tid, t in data["turnos"].items()
+                       if t["dni"] == dni and t["slot_id"] == slot_id and t["estado"] == "confirmado"), None)
+        if propio:  # idempotente: repetir la reserva (p. ej. tras una interrupción) devuelve la existente
+            return {"ok": True, "turno_id": propio, "ya_estaba_agendado": True, **_describir_slot(data, slot_id)}
         if not slot or not slot["libre"]:
             return {"ok": False, "error": "Ese turno ya no está disponible."}
         especialidad = _describir_slot(data, slot_id)["especialidad"]
@@ -163,6 +167,8 @@ def reprogramar_turno(turno_id: str, nuevo_slot_id: str) -> dict:
     """Mueve un turno confirmado a otro horario libre (hasta 24 h antes del turno original)."""
     with store.edit(DOMAIN, seed) as data:
         turno = data["turnos"].get(turno_id)
+        if turno and turno["estado"] == "confirmado" and turno["slot_id"] == nuevo_slot_id:  # idempotente
+            return {"ok": True, "turno_id": turno_id, "ya_estaba_reprogramado": True, **_describir_slot(data, nuevo_slot_id)}
         if not turno or turno["estado"] != "confirmado":
             return {"ok": False, "error": "Turno inexistente o ya cancelado."}
         if not _faltan_24h(data, turno["slot_id"]):
@@ -182,8 +188,10 @@ def cancelar_turno(turno_id: str) -> dict:
     """Cancela un turno confirmado (hasta 24 h antes)."""
     with store.edit(DOMAIN, seed) as data:
         turno = data["turnos"].get(turno_id)
+        if turno and turno["estado"] == "cancelado":  # idempotente
+            return {"ok": True, "turno_id": turno_id, "estado": "cancelado", "ya_estaba_cancelado": True}
         if not turno or turno["estado"] != "confirmado":
-            return {"ok": False, "error": "Turno inexistente o ya cancelado."}
+            return {"ok": False, "error": "Turno inexistente."}
         if not _faltan_24h(data, turno["slot_id"]):
             return {"ok": False, "error": "Faltan menos de 24 h: no se puede cancelar por este medio."}
         turno["estado"] = "cancelado"
