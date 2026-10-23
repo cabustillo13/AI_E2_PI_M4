@@ -41,7 +41,10 @@ async def lifespan(app: FastAPI):
     await app.state.toolbox.close()
 
 
-app = FastAPI(title="OpsVoice", version="0.1.0", lifespan=lifespan)
+# Sin la telemetría propia de FastAPI: ElevenLabs manda `traceparent` con sampled=00 y, si FastAPI lo toma
+# como contexto, los spans de Langfuse lo heredan y no se exportan.
+app = FastAPI(title="OpsVoice", version="0.1.0", lifespan=lifespan,
+              telemetry={"tracing": False, "metrics": False, "logs": False})
 
 
 # TODO [C16]: dependencia `require_api_key` que valide el header `Authorization: Bearer <OPSVOICE_API_KEY>`
