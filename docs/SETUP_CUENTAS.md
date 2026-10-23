@@ -1,44 +1,42 @@
 # Setup de cuentas y credenciales
 
 Todo va en `.env` (local) y en **Railway → servicio → Variables** (producción). Nunca en el repo.
-No hace falta LangGraph: el loop del agente es un loop de tools simple (M3 · clase 11).
+El loop del agente es un loop de tools simple (M3 · clase 11): no hace falta LangGraph.
 
 | # | Servicio | Qué crear | Variables | ¿Obligatorio? |
 |---|---|---|---|---|
 | 1 | — | Una clave propia para que ElevenLabs llame al backend: `python -c "import secrets; print(secrets.token_urlsafe(32))"` | `OPSVOICE_API_KEY` | Sí |
 | 2 | OpenAI | API key (platform.openai.com → API keys) | `OPENAI_API_KEY` | Sí (modelo primario y visión) |
-| 3 | Anthropic | API key (console.anthropic.com → API keys) | `ANTHROPIC_API_KEY` | Sí para demostrar el fallback entre proveedores |
+| 3 | Anthropic | API key (console.anthropic.com → API keys) | `ANTHROPIC_API_KEY` | No: solo si el fallback (`LLM_CHAIN`) usa otro proveedor |
 | 4 | Langfuse Cloud | Proyecto → Settings → API keys (plan gratuito) | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | Sí (monitoreo online) |
-| 5 | Railway | Proyecto conectado al repo de GitHub, un servicio por dominio | `DOMAIN` + todas las anteriores; después `PUBLIC_URL` | Sí |
-| 6 | ElevenLabs | API key con permisos de Agents (Settings → API keys) | `ELEVENLABS_API_KEY` | Sí |
-| 7 | Twilio | Cuenta + número con voz (Phone Numbers → Buy a number) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` | Sí para el canal telefónico |
-| 8 | GitHub | Secrets del repo para el gate de regresión en PRs | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` | Recomendado |
+| 5 | Railway | Proyecto conectado al repo de GitHub, un servicio para tu dominio | `DOMAIN` + las anteriores, `PUBLIC_URL`, `ELEVENLABS_AGENT_ID` | Sí |
+| 6 | ElevenLabs | API key con permisos de Agents (Settings → API keys), plan gratuito | `ELEVENLABS_API_KEY` | Sí |
+| 7 | GitHub | Secrets del repo para el gate de regresión en PRs | `OPENAI_API_KEY` | Recomendado |
 
-## Orden sugerido
+Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
+`LLM_CHAIN=openai:gpt-4.1-mini,openai:gpt-4o-mini`.
 
-1. Completar 1–4 en `.env` → `pytest -q` y `python -m evals.run_regression clinica` en local.
-2. Railway: crear los 3 servicios (`DOMAIN=clinica|logistica|cobranzas`), cargar variables, generar dominio
-   público (*Settings → Networking → Generate domain*) y copiarlo en `PUBLIC_URL`.
+## Orden
+
+1. Completar 1, 2 y 4 en `.env` → `pytest -q`.
+2. Railway: crear el servicio con tu `DOMAIN`, cargar las variables y generar el dominio público
+   (*Settings → Networking → Generate domain*). Copiarlo en `PUBLIC_URL`. Comprobar `PUBLIC_URL/health`.
 3. En el dashboard de ElevenLabs creá el agente: idioma, voz, primer mensaje y **LLM = Custom LLM** con
    URL `PUBLIC_URL/v1` y tu `OPSVOICE_API_KEY` como secret. Cargá la knowledge base del domain pack.
+   En el system prompt de ElevenLabs incluí `conversation_id: {{system__conversation_id}}`.
 4. Sobre ese agente:
-   - **Security → Guardrails**: activar los de contenido y prompt injection, y agregar un guardrail
-     custom: *"El agente nunca pide ni repite números de tarjeta, CBU, claves o códigos de seguridad."*
-     Acotalo bien: un guardrail genérico de "datos sensibles" corta la llamada cuando el agente pide el DNI.
-     Probalo con las simulaciones antes de darlo por bueno.
-   - Probar con el widget web (botón *Test AI agent*).
+   - **Guardrails**: activar los de contenido y prompt injection, y uno custom para datos de pago.
+     Acotalo bien: un guardrail genérico de "datos sensibles" corta la conversación cuando el agente pide
+     el DNI. Probalo con las simulaciones antes de darlo por bueno.
+   - **Seguridad**: el agente tiene que ser público (sin autenticación) para el widget de `/demo`;
+     agregá el dominio de Railway al *allowlist* para que solo funcione desde tu servicio.
    - Exportar la config (entregable): `python elevenlabs/export_agent.py <dominio> <agent_id>`.
-5. `python elevenlabs/setup_phone.py <dominio>` → copiar `ELEVENLABS_PHONE_NUMBER_ID` y el
-   `ELEVENLABS_AGENT_ID` del export en las variables del servicio de Railway (cobranzas los usa para llamar).
-6. `python -m evals.run_simulations <dominio>` y `python -m evals.online_report <dominio>`.
+5. Cargar el `agent_id` en `ELEVENLABS_AGENT_ID` (local y Railway) y abrir `PUBLIC_URL/demo`.
+6. `python -m evals.run_simulations <dominio>` y, después de conversar por la demo,
+   `python -m evals.online_report <dominio>`.
 
-## Notas sobre Twilio (importante para la defensa)
+## Notas
 
-- La pantalla *Try it out → Make a voice call* usa un número de Twilio de demo: **no se puede importar** en
-  ElevenLabs. Hace falta un número propio en *Phone Numbers → Active numbers*.
-- Con cuenta **trial** solo se puede llamar a/desde **números verificados** y Twilio reproduce un aviso
-  antes de cada llamada. Para la defensa conviene cargar saldo (USD 20 alcanza) y comprar un número de
-  EE. UU. (~USD 1,15/mes): los números argentinos exigen documentación regulatoria.
-- Llamar desde Argentina a un número de EE. UU. tiene costo para quien llama. Alternativa: **llamada
-  saliente** (`POST /calls/outbound`) al celular de la persona que evalúa.
-- Plan B si la telefonía falla en vivo: widget web de ElevenLabs + video del canal telefónico grabado.
+- El widget de `/demo` usa el micrófono del navegador: hay que abrirla por HTTPS (Railway ya lo da) o en
+  `localhost`.
+- Langfuse: las organizaciones nuevas leen las trazas con la API v2 (`/api/public/v2/observations`).

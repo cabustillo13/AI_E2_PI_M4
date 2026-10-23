@@ -1,6 +1,6 @@
 """API de OpsVoice — SCAFFOLD.
 
-Ya funciona: arranque, carga del domain pack, conexión al server MCP y /health.
+Ya funciona: arranque, carga del domain pack, conexión al server MCP, /health y la demo pública /demo.
 Te toca (buscá los TODO):
     POST /v1/chat/completions   ← ElevenLabs Agents (Custom LLM) · streaming SSE compatible con OpenAI  [C16]
     autenticación Bearer con OPSVOICE_API_KEY                                                         [C16]
@@ -16,10 +16,12 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, ConfigDict
 
 from mcp_server import store
 from src.config import settings
+from src.demo import render as render_demo
 from src.domain import load_domain
 from src.mcp_client import MCPToolbox
 
@@ -50,6 +52,15 @@ app = FastAPI(title="OpsVoice", version="0.1.0", lifespan=lifespan)
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok", "domain": settings.domain}
+
+
+@app.get("/demo", response_class=HTMLResponse)
+async def demo(request: Request, campana: bool = False) -> str:
+    """Página pública para hablar con el agente desde el navegador (widget de ElevenLabs). Ya viene hecha:
+    necesita ELEVENLABS_AGENT_ID (el agente que configurás en C20)."""
+    if not settings.elevenlabs_agent_id:
+        raise HTTPException(503, "Falta ELEVENLABS_AGENT_ID: configurá el agente en ElevenLabs (C20)")
+    return render_demo(request.app.state.domain, settings.elevenlabs_agent_id, campana)
 
 
 @app.post("/admin/reset")
