@@ -7,7 +7,8 @@ Junta dos fuentes, ambas medidas (nada estimado):
   por cada una (voz: STT + TTS, y los modelos propios que usa para turnos y análisis).
 - Backend (GET /metrics): latencia TTFT p50/p95, costo de nuestro LLM por conversación, eventos del harness.
 Las trazas detalladas de cada turno están en Langfuse (sesión = conversation_id).
-Las simulaciones de la testing suite no cuentan como conversaciones.
+Las simulaciones de la testing suite no cuentan como conversaciones. Las métricas del backend viven en
+memoria y se reinician con cada deploy: el reporte se corre después de conversar con la versión desplegada.
 """
 
 from __future__ import annotations
@@ -64,6 +65,8 @@ def main() -> None:
              + (f" ({resueltas / n:.0%})" if n else ""),
              f"- Duración promedio: {minutos:.1f} min · p95: {p95(durations) / 60:.1f} min", "",
              "## Técnico (backend)", "",
+             *(["> El backend no atendió turnos desde el último deploy: conversá por /demo y volvé a correr el "
+                "reporte (el costo del LLM del backend queda sin medir)."] if not backend["turnos"] else []),
              f"- TTFT p50 / p95: {backend['ttft_ms']['p50']} / {backend['ttft_ms']['p95']} ms",
              f"- Turno completo p50 / p95: {backend['turno_ms']['p50']} / {backend['turno_ms']['p95']} ms",
              f"- Eventos del harness: {backend['eventos'] or 'ninguno'}", "",
