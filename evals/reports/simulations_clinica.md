@@ -1,7 +1,7 @@
 # Simulaciones ElevenLabs · clinica
 
 - Aprobadas: **11/11** (100%)
-- Invocación: `suite_7201m5ed7wsyeyt9vprbrknavwt2` · agente `agent_1401m5ed4c08et9trhmrx7ehgwrf`
+- Invocación: `suite_2501m5k24wynfh6rj073kxa8fjpc` · agente `agent_1401m5ed4c08et9trhmrx7ehgwrf`
 
 | Escenario | Resultado | Resumen del evaluador |
 |---|---|---|

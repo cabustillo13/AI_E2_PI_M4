@@ -65,6 +65,7 @@ class Metrics:
         self.turn_ms: deque[float] = deque(maxlen=size)
         self.cost_by_conversation: dict[str, float] = {}
         self.counters: Counter[str] = Counter()
+        self.last_sessions: deque[str] = deque(maxlen=5)  # para buscar la traza en Langfuse por session_id
 
     @staticmethod
     def _pct(values: deque[float], p: float) -> float | None:
@@ -84,6 +85,7 @@ class Metrics:
             "costo_usd_promedio_conversacion": round(statistics.mean(costs), 5) if costs else None,
             "costo_usd_estimado_1000_conversaciones": round(statistics.mean(costs) * 1000, 2) if costs else None,
             "eventos": dict(self.counters),
+            "ultimas_sesiones": list(self.last_sessions),
         }
 
 

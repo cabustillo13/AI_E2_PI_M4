@@ -173,6 +173,8 @@ class Agent:
         if summary.ttft_ms is not None:
             metrics.ttft_ms.append(summary.ttft_ms)
         metrics.cost_by_conversation[cid] = self.budget.spent(cid)
+        if cid not in metrics.last_sessions:
+            metrics.last_sessions.append(cid)
         metrics.counters["guardrail_dato_sensible"] += summary.guardrail_hits
         if summary.budget_state == BudgetState.DEGRADED.value:
             metrics.counters["turnos_con_modelo_barato"] += 1
