@@ -28,9 +28,11 @@ SIMS = ROOT / "evals" / "simulations"
 REPORTS = ROOT / "evals" / "reports"
 
 
-def ensure_tests(http, domain: str, suite: dict) -> dict[str, str]:
+def ensure_tests(http, domain: str, agent_id: str, suite: dict) -> dict[str, str]:
+    """Los tests viven en la cuenta del agente: si el agente cambió (otra cuenta), se crean de nuevo."""
     ids_path = SIMS / f"test_ids_{domain}.json"
-    ids = json.loads(ids_path.read_text(encoding="utf-8")) if ids_path.exists() else {}
+    saved = json.loads(ids_path.read_text(encoding="utf-8")) if ids_path.exists() else {}
+    ids = saved.get("tests", {}) if saved.get("agent_id") == agent_id else {}
     for esc in suite["escenarios"]:
         if esc["id"] in ids:
             continue
@@ -43,7 +45,7 @@ def ensure_tests(http, domain: str, suite: dict) -> dict[str, str]:
         }))
         ids[esc["id"]] = resp["id"]
         print(f"test creado {esc['id']} → {resp['id']}")
-    ids_path.write_text(json.dumps(ids, indent=2), encoding="utf-8")
+    ids_path.write_text(json.dumps({"agent_id": agent_id, "tests": ids}, indent=2), encoding="utf-8")
     return ids
 
 
@@ -65,7 +67,7 @@ def main() -> None:
         httpx.post(f"{public_url}/admin/reset", headers={"Authorization": f"Bearer {api_key}"}, timeout=30)
 
     with client() as http:
-        ids = ensure_tests(http, args.domain, suite)
+        ids = ensure_tests(http, args.domain, agent_id, suite)
         invocation = check(http.post(f"/v1/convai/agents/{agent_id}/run-tests",
                                      json={"tests": [{"test_id": ids[e["id"]]} for e in suite["escenarios"]]}))
         print(f"Corriendo {len(ids)} simulaciones (invocación {invocation['id']})...")

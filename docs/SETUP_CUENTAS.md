@@ -37,6 +37,10 @@ Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
 
 ## Notas
 
+- **La voz la paga la cuenta dueña del agente**, no la de la API key de Railway. Si cambiás de cuenta de
+  ElevenLabs, el agente se crea de nuevo en esa cuenta y hay que cargar el `agent_id` nuevo en
+  `ELEVENLABS_AGENT_ID` (`.env` y Railway).
+
 - El widget de `/demo` usa el micrófono del navegador: hay que abrirla por HTTPS (Railway ya lo da) o en
   `localhost`.
 - Langfuse: las organizaciones nuevas leen las trazas con la API v2 (`/api/public/v2/observations`).
