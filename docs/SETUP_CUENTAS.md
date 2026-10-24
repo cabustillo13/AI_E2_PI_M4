@@ -30,6 +30,11 @@ Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
 
 ## Notas
 
+- **La voz la paga la cuenta dueña del agente**, no la de la API key de Railway (el backend no usa
+  `ELEVENLABS_API_KEY` en la conversación). Para usar otra cuenta: poner su key en `.env`, correr
+  `python elevenlabs/sync_agent.py <dominio>` (crea el agente en esa cuenta) y cargar el `agent_id` nuevo en
+  `ELEVENLABS_AGENT_ID` (`.env` y Railway). Las simulaciones crean sus tests en la cuenta nueva solas.
+
 - Si agregás guardrails custom en ElevenLabs, acotalos: uno genérico de "datos sensibles" corta la
   conversación cuando el agente pide el DNI. Probalos con las simulaciones antes de darlos por buenos.
 - El widget de `/demo` usa el micrófono del navegador: hay que abrirla por HTTPS (Railway ya lo da) o en

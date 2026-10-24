@@ -115,9 +115,14 @@ def main() -> None:
 
         api_key = os.getenv("OPSVOICE_API_KEY") or sys.exit("Falta OPSVOICE_API_KEY en el .env")
         previous = json.loads(export_path.read_text(encoding="utf-8")) if export_path.exists() else {}
+        if agent_id and http.get(f"/v1/convai/agents/{agent_id}").status_code == 404:
+            # El agente (y su secret) son de otra cuenta: la voz la cobra la cuenta dueña del agente,
+            # así que con una API key nueva se crea un agente nuevo en esa cuenta.
+            print(f"El agente {agent_id} no existe en la cuenta de ELEVENLABS_API_KEY: se crea uno nuevo.")
+            agent_id, previous = None, {}
         secret_id = (previous.get("conversation_config", {}).get("agent", {}).get("prompt", {})
                      .get("custom_llm", {}) or {}).get("api_key", {}).get("secret_id")
-        if not secret_id:  # al actualizar se reutiliza el secret; se crea solo la primera vez
+        if not secret_id:  # al actualizar se reutiliza el secret; se crea solo con el agente
             secret_id = check(http.post("/v1/convai/secrets", json={
                 "type": "new", "name": f"opsvoice-{args.domain}-api-key", "value": api_key}))["secret_id"]
         kb_doc = check(http.post("/v1/convai/knowledge-base/text",
@@ -129,7 +134,7 @@ def main() -> None:
             print(f"Agente actualizado: {agent_id}")
         else:
             agent_id = check(http.post("/v1/convai/agents/create", json=config))["agent_id"]
-            print(f"Agente creado: {agent_id}  →  guardalo como ELEVENLABS_AGENT_ID en Railway")
+            print(f"Agente creado: {agent_id}  →  cargalo como ELEVENLABS_AGENT_ID en Railway y en el .env")
         export(http, args.domain, agent_id)
 
 

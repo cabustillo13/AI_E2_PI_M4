@@ -1,5 +1,5 @@
 {
-  "agent_id": "agent_1401m5ed4c08et9trhmrx7ehgwrf",
+  "agent_id": "agent_1101m5qtjgm1fxpbd03cjrw7cr7s",
   "name": "OpsVoice · Clínica San Martín",
   "conversation_config": {
     "asr": {
@@ -172,7 +172,7 @@
           {
             "type": "text",
             "name": "KB Clínica San Martín",
-            "id": "1cc8HS8G1MFV3v5KVKWl",
+            "id": "gu9FS4KhJzOD6sB8ke7R",
             "usage_mode": "auto"
           }
         ],
@@ -180,7 +180,7 @@
           "url": "https://opsvoice-clinica.up.railway.app/v1",
           "model_id": "opsvoice",
           "api_key": {
-            "secret_id": "UaEhBHrAE0qk3MgvxIgf"
+            "secret_id": "J7kZSYtKCQIEhYq5S56q"
           },
           "auth_connection": null,
           "request_headers": {},
@@ -230,8 +230,8 @@
     }
   },
   "metadata": {
-    "created_at_unix_secs": 1792558643,
-    "updated_at_unix_secs": 1792717730
+    "created_at_unix_secs": 1792874727,
+    "updated_at_unix_secs": 1792874727
   },
   "platform_settings": {
     "evaluation": {
@@ -409,6 +409,7 @@
       },
       "show_resize_button": true,
       "end_confirmation_enabled": false,
+      "mobile_fullscreen": true,
       "language_selector": false,
       "supports_text_only": true,
       "custom_avatar_path": null,
@@ -452,41 +453,46 @@
       "evaluation_criteria": [
         {
           "source": "user",
-          "analysis_item_id": "aitem_9101m5ed4e3efmj9kq70nnk3zdsq",
+          "analysis_item_id": "aitem_6501m5qtjjfwf519ak58yhsb408a",
           "version_id": null,
           "additional_version_ids": [],
           "scope": "conversation",
-          "weight": null
+          "weight": null,
+          "run_conditions": null
         },
         {
           "source": "user",
-          "analysis_item_id": "aitem_7201m5ed4e3rfhhtws085hav9kha",
+          "analysis_item_id": "aitem_0501m5qtjjg6edqsqsy2pxykzxa7",
           "version_id": null,
           "additional_version_ids": [],
           "scope": "conversation",
-          "weight": null
+          "weight": null,
+          "run_conditions": null
         },
         {
           "source": "user",
-          "analysis_item_id": "aitem_8101m5ed4e3zfd3aj2yc92hdg7nj",
+          "analysis_item_id": "aitem_9301m5qtjjgdffyancc95x3n6bj9",
           "version_id": null,
           "additional_version_ids": [],
           "scope": "conversation",
-          "weight": null
+          "weight": null,
+          "run_conditions": null
         }
       ],
       "data_collection": [
         {
           "source": "user",
-          "analysis_item_id": "aitem_9301m5ed4e46fhrsjhdhtrgarbzg",
+          "analysis_item_id": "aitem_8201m5qtjjgmew9vyactcrdp13cs",
           "version_id": null,
-          "scope": "conversation"
+          "scope": "conversation",
+          "run_conditions": null
         },
         {
           "source": "user",
-          "analysis_item_id": "aitem_6301m5ed4e4de76s1d9epq9ymcdg",
+          "analysis_item_id": "aitem_2701m5qtjjgwfs2b4ebyz85anx34",
           "version_id": null,
-          "scope": "conversation"
+          "scope": "conversation",
+          "run_conditions": null
         }
       ]
     },
@@ -632,6 +638,7 @@
       }
     },
     "summary_language": null,
+    "summary_schedule": null,
     "auto_translate_transcript_to_app_language": null,
     "auth": {
       "enable_auth": false,
@@ -673,7 +680,8 @@
       },
       "user_memory": {
         "enabled": false,
-        "scale": "balanced"
+        "scale": "balanced",
+        "accept_unverified_identities": false
       }
     },
     "trust_context": "unknown",
@@ -718,8 +726,8 @@
   },
   "access_info": {
     "is_creator": true,
-    "creator_name": "cabustillo13@hotmail.com",
-    "creator_email": "cabustillo13@hotmail.com",
+    "creator_name": "Carlos Bustillo",
+    "creator_email": "cabustillo346@gmail.com",
     "role": "admin",
     "anonymous_access_level_override": null,
     "access_source": "creator"
@@ -795,9 +803,9 @@
     "opsvoice",
     "clinica"
   ],
-  "version_id": "agtvrsn_7101m5k4vd3tfr9sedd96ascgnpz",
-  "branch_id": "agtbrch_5701m5ed4e0mewsr2y8yrcy8d37y",
-  "main_branch_id": "agtbrch_5701m5ed4e0mewsr2y8yrcy8d37y",
+  "version_id": "agtvrsn_7501m5qtjjh3e9wavwzpfrtcm2jp",
+  "branch_id": "agtbrch_1701m5qtjjfhew5svq7ty40rkh8s",
+  "main_branch_id": "agtbrch_1701m5qtjjfhew5svq7ty40rkh8s",
   "procedures": {},
   "trust_context": "unknown",
   "default_hold_audio_url": "https://eleven-public-cdn-common.elevenlabs.io/convai/ambient-audio-assets/elevator1.mp3"
