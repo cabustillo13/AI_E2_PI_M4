@@ -81,7 +81,7 @@ Cada captura se cruza con datos que se pueden volver a consultar (API de ElevenL
 - Servicio `AI_E2_PI_M4` en el entorno `production`, estado **Online**, dominio `opsvoice-clinica.up.railway.app`.
 - Códigos HTTP: predominan los 2xx, con una franja mínima de 4xx. **Request Error Rate: 0,0 %**.
 - Tiempo de respuesta de los pedidos (incluye el streaming completo del turno): p50 ≈ 1 s y p99 ≈ 3 s.
-- Esta captura es de otra franja horaria (01:56–02:00 hora local) que la conversación de las capturas 2 a 4.
+- Esta captura es de otra franja horaria (01:56-02:00 hora local) que la conversación de las capturas 2 a 4.
 
 ## 6. Langfuse
 

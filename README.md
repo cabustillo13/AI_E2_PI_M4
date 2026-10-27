@@ -120,7 +120,7 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 | Capa | Qué mide | Cómo se corre | Cuándo |
 |---|---|---|---|
 | Tests unitarios/integración | Tools, harness, visión, API, demo, interrupciones y concurrencia (LLM falso, MCP real) | `pytest -q` | Cada push (CI) |
-| **Regresión pre-deploy** | 7–11 conversaciones guionadas por dominio: tools llamadas, políticas, inyecciones | `python -m evals.run_regression <dominio>` | Cada PR (CI, gate ≥ 85 %) |
+| **Regresión pre-deploy** | 7-11 conversaciones guionadas por dominio: tools llamadas, políticas, inyecciones | `python -m evals.run_regression <dominio>` | Cada PR (CI, gate ≥ 85 %) |
 | Visión | Status y exactitud por campo sobre 9 documentos (incluye inyección en la imagen) | `python -m evals.run_vision` | Al cambiar prompt/modelo de visión |
 | **Simulaciones** | ≥ 10 conversaciones por dominio con usuario simulado (testing suite de ElevenLabs) | `python -m evals.run_simulations <dominio>` | Antes de la demo / defensa |
 | Monitoreo online | Resolución, duración, TTFT p95, costo medido, eventos del harness | `python -m evals.online_report <dominio>` + Langfuse | Continuo |
