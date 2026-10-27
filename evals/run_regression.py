@@ -1,7 +1,7 @@
 """Suite de regresión pre-deploy (texto, LLM real).
 
     python -m evals.run_regression clinica                 # in-process, mocks aislados y fecha fija
-    python -m evals.run_regression clinica --url https://opsvoice-clinica.up.railway.app   # contra prod
+    python -m evals.run_regression clinica --url https://<tu-servicio>.up.railway.app   # contra prod
 
 Sale con código 1 si la tasa de aprobación queda debajo del umbral del YAML → sirve de gate en CI.
 Reporte: evals/reports/regression_<dominio>.md

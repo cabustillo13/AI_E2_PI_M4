@@ -21,6 +21,8 @@ así alcanza con una sola API key. Usar Anthropic como respaldo es opcional.
 1. Completar 1, 2 y 4 en `.env` → `pytest -q`.
 2. Railway: crear el servicio con tu `DOMAIN`, cargar las variables y generar el dominio público
    (*Settings → Networking → Generate domain*). Copiarlo en `PUBLIC_URL`. Comprobar `PUBLIC_URL/health`.
+   El subdominio lo elegís vos (p. ej. `opsvoice-<tu-nombre>.up.railway.app`): los de Railway son únicos y
+   `opsvoice-clinica.up.railway.app` ya lo usa la solución de referencia.
 3. En el dashboard de ElevenLabs creá el agente: idioma, voz, primer mensaje y **LLM = Custom LLM** con
    URL `PUBLIC_URL/v1` y tu `OPSVOICE_API_KEY` como secret. Cargá la knowledge base del domain pack.
    En el system prompt de ElevenLabs incluí `conversation_id: {{system__conversation_id}}`.
