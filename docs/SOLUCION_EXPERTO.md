@@ -14,6 +14,7 @@
 | Documentos de muestra para visión | `vision/samples/` (incluidos en el scaffold) | Ambos |
 | Evals de producción (regresión, visión, simulaciones, online) | `evals/` | Ambos (el scaffold trae el formato y 2 casos de ejemplo) |
 | Setup de cuentas y costos | `docs/SETUP_CUENTAS.md` | Ambos |
+| Evidencia de la demo en producción (capturas + cruce con trazas y métricas) | `docs/EVIDENCIA.md` | Equipo docente / defensa |
 
 **Qué trae el scaffold y qué construye el estudiante**
 

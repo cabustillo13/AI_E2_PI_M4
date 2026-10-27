@@ -53,7 +53,7 @@ vision/           ← schemas Pydantic, extractor con verification loop, muestra
 elevenlabs/       ← script que crea/actualiza el agente y exporta su configuración
 evals/            ← regresión (texto), simulaciones (ElevenLabs), visión, monitoreo online
 tests/            ← pytest sin claves (corre en CI en cada push)
-docs/             ← resolución del experto, setup de cuentas
+docs/             ← resolución del experto, setup de cuentas, evidencia de la demo (capturas)
 ```
 
 ## 2. Setup
@@ -142,7 +142,8 @@ en voz se percibe el TTFT, que se cubre con la frase corta previa a cada tool ("
 de visión extrae `total = 0`. El documento igual queda en `requiere_revision` por dos reglas
 independientes (suma de ítems y `texto_sospechoso`): defensa en capas.
 
-Reportes completos en `evals/reports/`.
+Reportes completos en `evals/reports/`. La evidencia de la demo en producción (capturas de la conversación de
+voz, ElevenLabs, Railway y Langfuse) está en [docs/EVIDENCIA.md](docs/EVIDENCIA.md).
 
 ## 5. Costo cada 1.000 conversaciones
 
