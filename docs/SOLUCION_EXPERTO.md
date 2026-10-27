@@ -1,6 +1,6 @@
-# 9. Resolución del caso — entrega del experto
+# 9. Resolución del caso: entrega del experto
 
-**Proyecto:** OpsVoice — Agente de operaciones voice-first · **Módulo:** M4 · Producción y Multimodal
+**Proyecto:** OpsVoice: Agente de operaciones voice-first · **Módulo:** M4 · Producción y Multimodal
 **Experto desarrollador:** Carlos B. · **Alcance:** solución de referencia completa para los 3 dominios del menú.
 
 ## 9.1 Qué se entrega

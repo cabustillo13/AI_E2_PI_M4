@@ -1,4 +1,4 @@
-"""Clínica San Martín — mock de la agenda de turnos.
+"""Clínica San Martín: mock de la agenda de turnos.
 
 Reglas de negocio que viven en las tools (no en el prompt):
 - Cancelar / reprogramar: hasta 24 h antes.

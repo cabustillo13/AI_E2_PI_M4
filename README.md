@@ -1,4 +1,4 @@
-# OpsVoice — Agente de operaciones voice-first
+# OpsVoice: Agente de operaciones voice-first
 
 Un agente que atiende **por voz** una operación real del negocio, usa las herramientas del negocio vía
 **MCP**, procesa un documento con **visión** y corre en **producción** con harness y evals.
@@ -25,15 +25,15 @@ flowchart LR
     BE --> LF["Langfuse"]
 ```
 
-- **`GET /demo`** — página pública con el widget de voz de ElevenLabs y los datos de prueba del dominio.
+- **`GET /demo`**: página pública con el widget de voz de ElevenLabs y los datos de prueba del dominio.
   En cobranzas, `?campana=1` abre la conversación como campaña: el agente contacta al cliente.
-- **`POST /v1/chat/completions`** — lo llama ElevenLabs en cada turno: guardrails (tarjetas/CBU fuera) →
+- **`POST /v1/chat/completions`**: lo llama ElevenLabs en cada turno: guardrails (tarjetas/CBU fuera) →
   memoria de la conversación → presupuesto USD → router de LLMs (fallback y modelo barato al 70 %) ⇄
   loop de tools MCP (máx. 5 vueltas) → texto en streaming.
-- **`POST /vision`** — documento → modelo de visión → Pydantic + reglas de negocio → relectura si falla;
+- **`POST /vision`**: documento → modelo de visión → Pydantic + reglas de negocio → relectura si falla;
   el resultado lo consultan las tools durante la conversación.
 - **`GET /metrics`** · **`GET /health`** · **`POST /admin/reset`** (mocks a datos semilla).
-- **Langfuse** — una traza por turno, agrupadas por conversación, con costo y latencia (PII enmascarada).
+- **Langfuse**: una traza por turno, agrupadas por conversación, con costo y latencia (PII enmascarada).
 
 **Decisión central: el "cerebro" vive en el backend.** ElevenLabs se encarga de la voz (STT, TTS,
 turnos, guardrails de plataforma) y le delega el razonamiento a nuestro endpoint con su opción
@@ -132,7 +132,7 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 | Costo LLM de la suite | USD 0,044 | USD 0,020 | USD 0,034 |
 | Turno completo p95 (con tools, sin voz) | 3,1 s | 2,3 s | 3,0 s |
 | Visión: status correcto / campos exactos | 3/3 · 10/10 | 3/3 · 7/7 | 3/3 · 6/7 |
-| Simulaciones ElevenLabs (agente real → Railway) | **11/11** | — | — |
+| Simulaciones ElevenLabs (agente real → Railway) | **11/11** | - | - |
 
 En producción (clínica, conversaciones reales por `/demo`): TTFT p50 0,5 s / p95 1,2 s; la conversación
 de agendar se resolvió con una única reserva (traza completa en Langfuse). El turno completo (~3 s p95) incluye las vueltas de tools;

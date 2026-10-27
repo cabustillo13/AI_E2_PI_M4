@@ -1,4 +1,4 @@
-"""Rumbo Logística — mock del sistema de tracking.
+"""Rumbo Logística: mock del sistema de tracking.
 
 Reglas de negocio que viven en las tools:
 - Sin DNI del destinatario correcto no se informa nada del envío.

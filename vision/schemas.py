@@ -1,9 +1,9 @@
 """Schemas de los documentos de cada dominio.
 
 Dos capas de validación (M1 · structured outputs, M4 · visión):
-1. **Estructura** — el modelo de visión devuelve exactamente este schema (structured outputs + Pydantic).
+1. **Estructura**: el modelo de visión devuelve exactamente este schema (structured outputs + Pydantic).
    Los campos que no se leen vienen en null: es preferible "no sé" a un dato inventado.
-2. **Negocio** — `business_errors()` revisa reglas que un LLM no garantiza: dígito verificador del CUIT,
+2. **Negocio**: `business_errors()` revisa reglas que un LLM no garantiza: dígito verificador del CUIT,
    que la suma de ítems dé el total, vigencia de la orden, firma presente, formatos de DNI/códigos.
 """
 
