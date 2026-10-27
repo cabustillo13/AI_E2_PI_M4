@@ -45,6 +45,8 @@ uvicorn src.main:app --reload                            # http://localhost:8000
 Con Docker (levanta el dominio de `DOMAIN` del `.env` en http://localhost:8000): `docker compose up --build`.
 
 Para ver qué te falta: `git grep -n "TODO \[C"` (cada TODO dice en qué clase se ve).
+Para testear tu agente y tu harness sin claves ni tokens, usá el LLM falso de `tests/fakes.py` (el docstring
+trae un test de ejemplo): esos tests corren en el CI en cada push.
 
 ### Probalo por texto (antes de sumar la voz)
 
