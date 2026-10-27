@@ -66,6 +66,8 @@ pytest -q                                                # 53 tests, sin claves
 uvicorn src.main:app --reload                            # http://localhost:8000/docs
 ```
 
+Con Docker (levanta el dominio de `DOMAIN` del `.env` en http://localhost:8000): `docker compose up --build`.
+
 Probar un turno por texto (lo mismo que manda ElevenLabs):
 
 ```bash
@@ -90,7 +92,8 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
    *Redeploy* sobre el deploy anterior.
 2. `python elevenlabs/sync_agent.py <dominio>` → crea o actualiza el agente (Custom LLM = `PUBLIC_URL/v1`,
    KB, guardrails, evaluación) y guarda el export en `elevenlabs/agents/<dominio>.json`.
-3. Cargar el `agent_id` del export como `ELEVENLABS_AGENT_ID` en el servicio de Railway.
+3. Cargar el `agent_id` que imprime el script como `ELEVENLABS_AGENT_ID` en el `.env` y en Railway. Es la
+   única variable del agente: con ella `sync_agent.py` actualiza ese agente y la usan los scripts de `evals/`.
 4. Abrir `PUBLIC_URL/demo` y hablar con el agente.
 
 ## 3. Decisiones técnicas
@@ -121,7 +124,7 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 | Capa | Qué mide | Cómo se corre | Cuándo |
 |---|---|---|---|
 | Tests unitarios/integración | Tools, harness, visión, API, demo, interrupciones y concurrencia (LLM falso, MCP real) | `pytest -q` | Cada push (CI) |
-| **Regresión pre-deploy** | 7-11 conversaciones guionadas por dominio: tools llamadas, políticas, inyecciones | `python -m evals.run_regression <dominio>` | Cada PR (CI, gate ≥ 85 %) |
+| **Regresión pre-deploy** | 7-11 conversaciones guionadas por dominio: tools llamadas, políticas, inyecciones | `python -m evals.run_regression <dominio>` | Cada PR (CI, dominio de la variable `DOMAIN` del repo, gate ≥ 85 %) |
 | Visión | Status y exactitud por campo sobre 9 documentos (incluye inyección en la imagen) | `python -m evals.run_vision` | Al cambiar prompt/modelo de visión |
 | **Simulaciones** | ≥ 10 conversaciones por dominio con usuario simulado (testing suite de ElevenLabs) | `python -m evals.run_simulations <dominio>` | Antes de la demo / defensa |
 | Monitoreo online | Resolución, duración, TTFT p95, costo medido, eventos del harness | `python -m evals.online_report <dominio>` + Langfuse | Continuo |

@@ -1,7 +1,7 @@
 """Crea o actualiza el agente de ElevenLabs de un dominio a partir de domains/<id>.md.
 
-    python elevenlabs/sync_agent.py clinica            # crea (o actualiza si ya existe el export)
-    python elevenlabs/sync_agent.py clinica --export   # solo baja la config actual a agents/clinica.json
+    python elevenlabs/sync_agent.py clinica            # crea el agente (o actualiza el de ELEVENLABS_AGENT_ID)
+    python elevenlabs/sync_agent.py clinica --export   # solo baja la config del de ELEVENLABS_AGENT_ID a agents/clinica.json
 
 Qué configura:
 - LLM = Custom LLM → PUBLIC_URL/v1 (nuestro backend), autenticado con OPSVOICE_API_KEY (secret de ElevenLabs).

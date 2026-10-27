@@ -26,13 +26,14 @@
 | Cliente MCP (`src/mcp_client.py`), carga del domain pack y demo pública (`/demo`) | Schemas de visión + reglas + verification loop (C19) |
 | Imágenes de muestra y su golden set | Configuración del agente ElevenLabs conectado al backend (C20) |
 | Runners de evals (formato YAML) | Casos de regresión, escenarios de simulación y reporte (C21) |
+| Proveedor OpenAI (fallback por defecto: otro modelo de OpenAI) y LLM falso para tests (`tests/fakes.py`) | Opcional: proveedor de respaldo de Anthropic (C18) |
 
 ## 9.2 Decisiones técnicas clave (y por qué)
 
 1. **Scaffold FastAPI + Docker + GitHub Actions + Railway.** Un Dockerfile, un `railway.json` con
    healthcheck y un CI con tres jobs: tests sin claves (cada push), build + smoke del contenedor, y
-   regresión con LLM real como gate en PRs. Railway despliega desde `main` con *Wait for CI*; el rollback
-   es redeploy del deploy anterior. Guía alternativa AWS: la misma imagen corre en App Runner/ECS sin cambios.
+   regresión con LLM real como gate en PRs (del dominio de la variable `DOMAIN` del repo). Railway
+   despliega desde `main` con *Wait for CI*; el rollback es redeploy del deploy anterior. Guía alternativa AWS: la misma imagen corre en App Runner/ECS sin cambios.
 2. **El cerebro en el backend (ElevenLabs Custom LLM).** Es la decisión que hace coherente el módulo:
    sin ella, el harness de C18 y la regresión de C21 quedarían como configuración de la plataforma.
    ElevenLabs aporta voz, turnos, KB y guardrails de plataforma; el backend razona, llama tools y aplica

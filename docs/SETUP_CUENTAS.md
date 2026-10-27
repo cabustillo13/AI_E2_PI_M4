@@ -11,7 +11,7 @@ El loop del agente es un loop de tools simple (M3 · clase 11): no hace falta La
 | 4 | Langfuse Cloud | Proyecto → Settings → API keys (plan gratuito) | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | Sí (monitoreo online) |
 | 5 | Railway | Proyecto conectado al repo de GitHub, un servicio por dominio | `DOMAIN` + las anteriores, `PUBLIC_URL`, `ELEVENLABS_AGENT_ID` | Sí |
 | 6 | ElevenLabs | API key con permisos de Agents (Settings → API keys), plan gratuito | `ELEVENLABS_API_KEY` | Sí |
-| 7 | GitHub | Secrets del repo para el gate de regresión en PRs | `OPENAI_API_KEY` | Recomendado |
+| 7 | GitHub | Secret `OPENAI_API_KEY` y variable `DOMAIN` (Settings → Secrets and variables → Actions) para el gate de regresión en PRs | `OPENAI_API_KEY`, `DOMAIN` | Recomendado |
 
 Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
 `LLM_CHAIN=openai:gpt-4.1-mini,openai:gpt-4o-mini` y `VISION_FALLBACK=openai:gpt-4o-mini`.
@@ -26,7 +26,8 @@ Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
    Comprobar: `PUBLIC_URL/health` responde `{"status":"ok", ...}`.
 3. `python elevenlabs/sync_agent.py <dominio>` → crea el agente con Custom LLM, KB, guardrails, evaluación
    post-llamada, duración máxima de la llamada y acceso restringido a `PUBLIC_URL`. El export queda en `elevenlabs/agents/<dominio>.json`.
-4. Copiar el `agent_id` del export en `ELEVENLABS_AGENT_ID` (local y Railway) y abrir `PUBLIC_URL/demo`.
+4. Copiar el `agent_id` que imprime el script en `ELEVENLABS_AGENT_ID` (local y Railway) y abrir `PUBLIC_URL/demo`.
+   Con esa variable cargada, volver a correr `sync_agent.py` actualiza el mismo agente (no crea otro).
 5. `python -m evals.run_simulations <dominio>` y, después de conversar por la demo,
    `python -m evals.online_report <dominio>`.
 
