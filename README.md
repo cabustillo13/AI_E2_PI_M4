@@ -85,7 +85,8 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 
 1. Railway → *New project* → *Deploy from GitHub* → un servicio por dominio desde este repo, cada uno con
    su `DOMAIN` y las variables de `.env.example`. *Settings → Networking → Generate domain* da la URL
-   pública (`PUBLIC_URL`). Con *Wait for CI* solo despliega si pasa CI. Rollback: *Deployments* →
+   pública (`PUBLIC_URL`): elegí tu propio subdominio, `opsvoice-clinica.up.railway.app` es el de esta
+   solución y ya está tomado. Con *Wait for CI* solo despliega si pasa CI. Rollback: *Deployments* →
    *Redeploy* sobre el deploy anterior.
 2. `python elevenlabs/sync_agent.py <dominio>` → crea o actualiza el agente (Custom LLM = `PUBLIC_URL/v1`,
    KB, guardrails, evaluación) y guarda el export en `elevenlabs/agents/<dominio>.json`.

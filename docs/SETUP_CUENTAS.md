@@ -21,6 +21,8 @@ Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
 1. Completar 1, 2 y 4 en `.env` → `pytest -q` y `python -m evals.run_regression clinica` en local.
 2. Railway: crear el servicio (`DOMAIN=clinica|logistica|cobranzas`), cargar las variables y generar el
    dominio público (*Settings → Networking → Generate domain*). Copiarlo en `PUBLIC_URL` (local y Railway).
+   El subdominio lo elegís vos (p. ej. `opsvoice-<tu-nombre>.up.railway.app`): los de Railway son únicos y
+   `opsvoice-clinica.up.railway.app` ya lo usa la solución de referencia.
    Comprobar: `PUBLIC_URL/health` responde `{"status":"ok", ...}`.
 3. `python elevenlabs/sync_agent.py <dominio>` → crea el agente con Custom LLM, KB, guardrails, evaluación
    post-llamada, duración máxima de la llamada y acceso restringido a `PUBLIC_URL`. El export queda en `elevenlabs/agents/<dominio>.json`.
