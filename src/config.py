@@ -23,7 +23,7 @@ class Settings:
 
     # Modelos en formato "proveedor:modelo". El orden de la cadena es el orden de fallback.
     llm_chain: tuple[str, ...] = field(default_factory=lambda: tuple(
-        m.strip() for m in _env("LLM_CHAIN", "openai:gpt-4.1-mini,anthropic:claude-opus-5-5").split(",") if m.strip()
+        m.strip() for m in _env("LLM_CHAIN", "openai:gpt-4.1-mini,anthropic:claude-haiku-5-5").split(",") if m.strip()
     ))
     llm_cheap: str = field(default_factory=lambda: _env("LLM_CHEAP", "openai:gpt-4.1-nano"))
     vision_model: str = field(default_factory=lambda: _env("VISION_MODEL", "openai:gpt-4.1-mini"))

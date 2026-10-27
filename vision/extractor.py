@@ -88,7 +88,7 @@ async def extract(doc_type: str, image: bytes, mime: str, errores_previos: list[
         prompt += RETRY_HINT.format(errores="\n- ".join(errores_previos))
     image_b64 = base64.standard_b64encode(image).decode()
     last_error: Exception | None = None
-    for spec in (settings.vision_model, os.getenv("VISION_FALLBACK", "anthropic:claude-opus-5-5")):
+    for spec in (settings.vision_model, os.getenv("VISION_FALLBACK", "anthropic:claude-haiku-5-5")):
         provider, _, model = spec.partition(":")
         fn = _extract_openai if provider == "openai" else _extract_anthropic
         try:

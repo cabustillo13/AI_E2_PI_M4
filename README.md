@@ -107,6 +107,7 @@ curl -s localhost:8000/vision -H "Authorization: Bearer $OPSVOICE_API_KEY" \
 | **Modificar solo con una opción concreta** | "El lunes" o "a la mañana" no alcanzan para agendar: el agente ofrece opciones y espera que la persona elija y confirme. |
 | **Fallback solo antes de hablar** | Si el modelo falla o tarda más de 6 s en la primera señal, se pasa al siguiente. Si ya empezó a hablar, no se puede "desdecir": se pide disculpas. |
 | **Presupuesto por conversación** | 70 %: modelo barato. 100 %: mensaje de cierre fijo y `end_call`, sin gastar un token más. |
+| **Tope de duración de la llamada** | El presupuesto controla el LLM, pero la voz es ~85 % del costo y `/demo` es pública: ElevenLabs corta la llamada a los `duracion_max_llamada_s` (5 min, más del doble de la conversación medida). |
 | **Guardrail de tarjetas/CBU antes del LLM** | "El LLM nunca toca datos de pago" se cumple aunque el prompt falle (Luhn + largo de CBU). |
 | **Guardrails de plataforma acotados** | El custom de ElevenLabs bloquea solo tarjeta/CBU/CVV/claves: uno genérico de "datos sensibles" corta la conversación cuando el agente pide el DNI. |
 | **Visión: structured output + reglas + 1 relectura** | Pydantic garantiza la forma; las reglas (CUIT, totales, vigencia, firma) detectan errores de contenido; la relectura dirigida corrige lecturas malas; si persiste → `requiere_revision`, nunca se "arregla" a mano. Texto con instrucciones dentro del documento → campo `texto_sospechoso` → revisión. |

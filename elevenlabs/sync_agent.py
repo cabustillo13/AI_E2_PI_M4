@@ -9,6 +9,7 @@ Qué configura:
 - System prompt de *canal*: solo variables de la llamada. El comportamiento vive en el backend.
 - Knowledge base: la sección '# Base de conocimiento' del domain pack.
 - Tool de sistema end_call (la ejecuta ElevenLabs cuando el backend la pide).
+- Duración máxima de la llamada (del frontmatter): la voz es ~85 % del costo y /demo es pública.
 - Evaluación post-llamada y recolección de datos (del frontmatter).
 - Guardrails de plataforma: foco en el rol, prompt injection, contenido dañino y uno custom de datos de pago.
 - Acceso: público para el widget de GET /demo, restringido a PUBLIC_URL y localhost.
@@ -75,7 +76,8 @@ def build_config(domain, secret_id: str, kb_doc: dict) -> dict:
     return {
         "name": f"OpsVoice · {meta['empresa']}",
         "tags": ["opsvoice", domain.id],
-        "conversation_config": {"agent": agent, **({"tts": tts} if tts else {})},
+        "conversation_config": {"agent": agent, **({"tts": tts} if tts else {}),
+                                "conversation": {"max_duration_seconds": meta["duracion_max_llamada_s"]}},
         "platform_settings": {
             # Agente público (lo usa el widget de /demo) pero solo desde nuestro dominio y localhost.
             "auth": {"enable_auth": False,

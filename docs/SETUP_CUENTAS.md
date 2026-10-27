@@ -23,7 +23,7 @@ Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
    dominio público (*Settings → Networking → Generate domain*). Copiarlo en `PUBLIC_URL` (local y Railway).
    Comprobar: `PUBLIC_URL/health` responde `{"status":"ok", ...}`.
 3. `python elevenlabs/sync_agent.py <dominio>` → crea el agente con Custom LLM, KB, guardrails, evaluación
-   post-llamada y acceso restringido a `PUBLIC_URL`. El export queda en `elevenlabs/agents/<dominio>.json`.
+   post-llamada, duración máxima de la llamada y acceso restringido a `PUBLIC_URL`. El export queda en `elevenlabs/agents/<dominio>.json`.
 4. Copiar el `agent_id` del export en `ELEVENLABS_AGENT_ID` (local y Railway) y abrir `PUBLIC_URL/demo`.
 5. `python -m evals.run_simulations <dominio>` y, después de conversar por la demo,
    `python -m evals.online_report <dominio>`.
