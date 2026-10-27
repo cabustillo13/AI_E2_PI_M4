@@ -28,3 +28,11 @@ def check(resp: httpx.Response) -> dict:
 
 
 AGENTS_DIR = ROOT / "elevenlabs" / "agents"
+
+
+def agent_id() -> str:
+    """El agente se identifica siempre con una sola variable: ELEVENLABS_AGENT_ID (la misma que usa /demo)."""
+    value = os.getenv("ELEVENLABS_AGENT_ID", "").strip()
+    if not value:
+        sys.exit("Falta ELEVENLABS_AGENT_ID en el .env: creá el agente con elevenlabs/sync_agent.py y copiá su id")
+    return value

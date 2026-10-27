@@ -22,7 +22,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "elevenlabs"))
-from client import AGENTS_DIR, check, client  # noqa: E402
+from client import agent_id as get_agent_id, check, client  # noqa: E402
 
 SIMS = ROOT / "evals" / "simulations"
 REPORTS = ROOT / "evals" / "reports"
@@ -55,11 +55,7 @@ def main() -> None:
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
     suite = yaml.safe_load((SIMS / f"{args.domain}.yaml").read_text(encoding="utf-8"))
-    export = AGENTS_DIR / f"{args.domain}.json"
-    agent_id = os.getenv(f"ELEVENLABS_AGENT_ID_{args.domain.upper()}") or (
-        json.loads(export.read_text(encoding="utf-8"))["agent_id"] if export.exists() else None)
-    if not agent_id:
-        sys.exit("Primero creá el agente: python elevenlabs/sync_agent.py " + args.domain)
+    agent_id = get_agent_id()
 
     # Mocks a datos semilla para que cada corrida parta del mismo estado.
     public_url, api_key = os.getenv("PUBLIC_URL", "").rstrip("/"), os.getenv("OPSVOICE_API_KEY", "")

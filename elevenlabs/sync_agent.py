@@ -106,13 +106,17 @@ def main() -> None:
     args = parser.parse_args()
     domain = load_domain(args.domain)
     export_path = AGENTS_DIR / f"{args.domain}.json"
-    agent_id = os.getenv(f"ELEVENLABS_AGENT_ID_{args.domain.upper()}") or (
-        json.loads(export_path.read_text(encoding="utf-8"))["agent_id"] if export_path.exists() else None)
+    agent_id = os.getenv("ELEVENLABS_AGENT_ID", "").strip() or None
+    exported = json.loads(export_path.read_text(encoding="utf-8")).get("agent_id") if export_path.exists() else None
+    if not agent_id and exported and not args.export:
+        # Evita crear un agente duplicado por no haber cargado el id del agente ya creado.
+        sys.exit(f"Ya existe el agente {exported} (export en {export_path.name}): cargalo en ELEVENLABS_AGENT_ID "
+                 "para actualizarlo, o borrá el export para crear uno nuevo.")
 
     with client() as http:
         if args.export:
             if not agent_id:
-                sys.exit("No hay agent_id para exportar")
+                sys.exit("Falta ELEVENLABS_AGENT_ID en el .env")
             return export(http, args.domain, agent_id)
 
         api_key = os.getenv("OPSVOICE_API_KEY") or sys.exit("Falta OPSVOICE_API_KEY en el .env")

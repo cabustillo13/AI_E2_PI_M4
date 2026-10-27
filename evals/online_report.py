@@ -14,7 +14,6 @@ memoria y se reinician con cada deploy: el reporte se corre después de conversa
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import statistics
 import sys
@@ -24,7 +23,7 @@ import httpx
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "elevenlabs"))
-from client import AGENTS_DIR, check, client  # noqa: E402
+from client import agent_id as get_agent_id, check, client  # noqa: E402
 
 
 def p95(values: list[float]) -> float:
@@ -38,7 +37,7 @@ def main() -> None:
     parser.add_argument("domain", choices=["clinica", "logistica", "cobranzas"])
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
-    agent_id = json.loads((AGENTS_DIR / f"{args.domain}.json").read_text(encoding="utf-8"))["agent_id"]
+    agent_id = get_agent_id()
 
     with client() as http:
         listed = check(http.get("/v1/convai/conversations", params={"agent_id": agent_id, "page_size": 100}))
