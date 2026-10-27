@@ -11,10 +11,10 @@ El loop del agente es un loop de tools simple (M3 · clase 11): no hace falta La
 | 4 | Langfuse Cloud | Proyecto → Settings → API keys (plan gratuito) | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | Sí (monitoreo online) |
 | 5 | Railway | Proyecto conectado al repo de GitHub, un servicio para tu dominio | `DOMAIN` + las anteriores, `PUBLIC_URL`, `ELEVENLABS_AGENT_ID` | Sí |
 | 6 | ElevenLabs | API key con permisos de Agents (Settings → API keys), plan gratuito | `ELEVENLABS_API_KEY` | Sí |
-| 7 | GitHub | Secrets del repo para el gate de regresión en PRs | `OPENAI_API_KEY` | Recomendado |
+| 7 | GitHub | Secret `OPENAI_API_KEY` y variable `DOMAIN` (Settings → Secrets and variables → Actions) para el gate de regresión en PRs | `OPENAI_API_KEY`, `DOMAIN` | Recomendado |
 
-Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
-`LLM_CHAIN=openai:gpt-4.1-mini,openai:gpt-4o-mini`.
+Por defecto el fallback es otro modelo del mismo proveedor (`LLM_CHAIN=openai:gpt-4.1-mini,openai:gpt-4o-mini`),
+así alcanza con una sola API key. Usar Anthropic como respaldo es opcional.
 
 ## Orden
 
@@ -33,8 +33,8 @@ Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
    - **Duración máxima de la llamada** (Advanced → *Max conversation duration*): usá
      `duracion_max_llamada_s` del domain pack. La voz es ~85 % del costo y `/demo` es pública:
      el presupuesto del backend solo controla el LLM, este tope controla la voz.
-   - Exportar la config (entregable): `python elevenlabs/export_agent.py <dominio> <agent_id>`.
 5. Cargar el `agent_id` en `ELEVENLABS_AGENT_ID` (local y Railway) y abrir `PUBLIC_URL/demo`.
+   Exportar la config (entregable): `python elevenlabs/export_agent.py <dominio>`.
 6. `python -m evals.run_simulations <dominio>` y, después de conversar por la demo,
    `python -m evals.online_report <dominio>`.
 

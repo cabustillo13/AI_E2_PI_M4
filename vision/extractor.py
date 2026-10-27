@@ -19,6 +19,6 @@ class VisionError(Exception):
 
 
 async def process_document(domain, referencia: str, image: bytes, mime: str) -> dict:
-    """TODO: domain.meta["documento_vision"] dice qué schema usar (vision/schemas.py → SCHEMAS).
+    """TODO [C19]: domain.meta["documento_vision"] dice qué schema usar (vision/schemas.py → SCHEMAS).
     Tip OpenAI: client.chat.completions.parse(..., response_format=Schema) con la imagen en base64."""
     raise NotImplementedError

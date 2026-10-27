@@ -160,7 +160,8 @@ class AnthropicProvider:
         return self._client
 
     async def stream(self, messages: list[dict], tools: list[dict]) -> AsyncIterator[TextDelta | LLMResult]:
-        """TODO [C18]: proveedor de respaldo para el fallback. Usá to_anthropic(messages) para traducir el
+        """TODO [C18] (opcional): proveedor de respaldo de otra empresa. El default de LLM_CHAIN es solo OpenAI;
+        si sumás anthropic:... a la cadena, implementá esto. Usá to_anthropic(messages) para traducir el
         formato, client.messages.stream(...) para el texto y get_final_message() para tool_use y usage.
         Convertí los errores del SDK en LLMError para que el router pueda hacer fallback."""
         raise NotImplementedError

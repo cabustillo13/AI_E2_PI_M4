@@ -13,8 +13,9 @@ class BudgetTracker:
         self.degrade_ratio = degrade_ratio
 
     def add(self, conversation_id: str, usd: float) -> None:
+        """TODO [C18]: sumar el gasto de la conversación (dict conversation_id → USD)."""
         raise NotImplementedError
 
     def state(self, conversation_id: str) -> str:
-        """TODO: devolver 'ok' | 'degraded' | 'exhausted'."""
+        """TODO [C18]: devolver 'ok' | 'degraded' | 'exhausted'."""
         raise NotImplementedError

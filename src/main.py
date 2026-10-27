@@ -1,7 +1,7 @@
 """API de OpsVoice (SCAFFOLD).
 
 Ya funciona: arranque, carga del domain pack, conexión al server MCP, /health y la demo pública /demo.
-Te toca (buscá los TODO):
+Te toca (buscá los TODO [Cxx]):
     POST /v1/chat/completions   ← ElevenLabs Agents (Custom LLM) · streaming SSE compatible con OpenAI  [C16]
     autenticación Bearer con OPSVOICE_API_KEY                                                         [C16]
     POST /vision                ← documento del dominio → JSON validado                               [C19]
@@ -34,8 +34,13 @@ async def lifespan(app: FastAPI):
     app.state.domain = load_domain(settings.domain)
     app.state.toolbox = MCPToolbox(settings.domain)
     await app.state.toolbox.start()
-    # TODO [C18]: construir acá el router de LLMs (fallback), el BudgetTracker y el RateLimiter,
-    #             y el Agent que los usa (ver src/agent.py y src/harness/).
+    # TODO [C18]: construir acá el harness y el agente, por ejemplo:
+    #   router = LLMRouter([build_provider(s) for s in settings.llm_chain], build_provider(settings.llm_cheap),
+    #                      settings.first_token_timeout_s)
+    #   budget = BudgetTracker(app.state.domain.meta["presupuesto_usd_conversacion"], settings.budget_degrade_ratio)
+    #   app.state.agent = Agent(app.state.domain, app.state.toolbox, router, budget, ConversationStore(),
+    #                           settings.max_tool_iterations)
+    #   app.state.limiter = RateLimiter(settings.rate_limit_per_minute)
     log.info("OpsVoice listo · dominio=%s · tools=%s", settings.domain, sorted(app.state.toolbox.names))
     yield
     await app.state.toolbox.close()
@@ -100,17 +105,17 @@ async def chat_completions(body: ChatRequest, request: Request):
     4. Si el LLM pide una tool que NO es del MCP (p. ej. end_call de ElevenLabs), devolverla como
        delta.tool_calls para que la ejecute la plataforma.
     """
-    raise HTTPException(501, "TODO: implementar /v1/chat/completions")
+    raise HTTPException(501, "TODO [C16]: implementar /v1/chat/completions")
 
 
 @app.post("/vision")
 async def vision(request: Request):
     """TODO [C19]: recibir `referencia` (Form) y `archivo` (UploadFile), validar tipo y tamaño, y llamar a
     vision.extractor.process_document(request.app.state.domain, referencia, bytes, content_type)."""
-    raise HTTPException(501, "TODO: implementar /vision")
+    raise HTTPException(501, "TODO [C19]: implementar /vision")
 
 
 @app.get("/metrics")
 async def get_metrics():
     """TODO [C21]: devolver src.observability.metrics.snapshot() (TTFT p50/p95, costo por conversación...)."""
-    raise HTTPException(501, "TODO: implementar /metrics")
+    raise HTTPException(501, "TODO [C21]: implementar /metrics")

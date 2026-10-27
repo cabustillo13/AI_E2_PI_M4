@@ -27,7 +27,7 @@ Leelo primero.
 | `mcp_server/` con las tools mock y sus datos · `src/mcp_client.py` | Conectarlas al loop del agente | C16 |
 | `src/main.py` con arranque, `/health`, `/admin/reset` y la demo pública `/demo` | `/v1/chat/completions` con SSE + auth Bearer | C16 |
 | `Dockerfile`, `docker-compose.yml`, `railway.json`, CI | Deploy en Railway con URL pública (**semana 1**) | C17 |
-| `src/llm/providers.py` (OpenAI listo) · `src/llm/pricing.py` | Proveedor de respaldo, `src/harness/*`, `src/agent.py` | C18 |
+| `src/llm/providers.py` (OpenAI listo) · `src/llm/pricing.py` · `tests/fakes.py` (LLM falso) | `src/harness/*`, `src/agent.py` (opcional: respaldo con Anthropic) | C18 |
 | `vision/schemas.py` (campos) · `vision/samples/` · golden set | Reglas de negocio + `vision/extractor.py` + `/vision` | C19 |
 | `elevenlabs/export_agent.py` · `src/demo.py` (widget de voz) | Agente en ElevenLabs (Custom LLM → tu backend), probado en `/demo` | C20 |
 | Runners de `evals/` + 2 casos de ejemplo por suite | Casos de regresión, ≥ 10 simulaciones, reportes, costos | C21 |
@@ -41,6 +41,24 @@ cp .env.example .env                                     # ver docs/SETUP_CUENTA
 pytest -q                                                # tests de los mocks: tienen que pasar desde el día 1
 uvicorn src.main:app --reload                            # http://localhost:8000/docs
 ```
+
+Con Docker (levanta el dominio de `DOMAIN` del `.env` en http://localhost:8000): `docker compose up --build`.
+
+Para ver qué te falta: `git grep -n "TODO \[C"` (cada TODO dice en qué clase se ve).
+
+### Probalo por texto (antes de sumar la voz)
+
+Cuando termines `/v1/chat/completions` (C16), probalo sin ElevenLabs. Con `stream: false` devuelve la
+respuesta entera y las tools que llamó (es lo mismo que usa la suite de regresión):
+
+```bash
+curl -s localhost:8000/v1/chat/completions \
+  -H "Authorization: Bearer $OPSVOICE_API_KEY" -H "Content-Type: application/json" -H "X-Conversation-Id: prueba-1" \
+  -d '{"stream": false, "messages": [{"role": "user", "content": "Hola, quiero sacar un turno con clínica médica"}]}'
+```
+
+Para seguir la conversación, repetí el pedido con el mismo `X-Conversation-Id` y el mensaje nuevo.
+Sacá `"stream": false` para ver el streaming SSE tal como lo recibe ElevenLabs (`curl -N`).
 
 ## 4. Arquitectura propuesta
 

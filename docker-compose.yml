@@ -1,18 +1,7 @@
-# Levanta los 3 dominios en local, igual que en Railway (misma imagen, distinto DOMAIN).
-#   docker compose up --build
+# Levanta tu dominio en local, igual que en Railway (misma imagen; el dominio sale de DOMAIN en el .env).
+#   docker compose up --build   →   http://localhost:8000
 services:
-  clinica:
+  opsvoice:
     build: .
     env_file: .env
-    environment: { DOMAIN: clinica }
-    ports: ["8001:8000"]
-  logistica:
-    build: .
-    env_file: .env
-    environment: { DOMAIN: logistica }
-    ports: ["8002:8000"]
-  cobranzas:
-    build: .
-    env_file: .env
-    environment: { DOMAIN: cobranzas }
-    ports: ["8003:8000"]
+    ports: ["8000:8000"]

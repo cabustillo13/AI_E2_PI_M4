@@ -8,5 +8,5 @@ class RateLimiter:
         self.max = max_per_minute
 
     def allow(self, key: str) -> bool:
-        """TODO: ventana deslizante (collections.deque de timestamps por key)."""
+        """TODO [C18]: ventana deslizante (collections.deque de timestamps por key)."""
         raise NotImplementedError

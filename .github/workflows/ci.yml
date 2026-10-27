@@ -7,7 +7,7 @@ on:
 
 jobs:
   tests:
-    # Sin claves: tools, harness, visión y API con LLM falso. Corre en cada push.
+    # Sin claves: corre en cada push. Para testear tu agente sin gastar tokens usá tests/fakes.py.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,17 +31,16 @@ jobs:
           docker logs ops; exit 1
 
   regression:
-    # Gate pre-deploy con LLM real. Solo en PRs y si el repo tiene el secret OPENAI_API_KEY.
+    # Gate pre-deploy con LLM real, solo para TU dominio. Corre en PRs y si el repo tiene el secret
+    # OPENAI_API_KEY. El dominio sale de la variable DOMAIN del repo (Settings → Secrets and variables →
+    # Actions → Variables); si no está, clinica.
     runs-on: ubuntu-latest
     needs: tests
     if: github.event_name == 'pull_request'
     env:
+      DOMAIN: ${{ vars.DOMAIN || 'clinica' }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-    strategy:
-      fail-fast: false
-      matrix:
-        domain: [clinica, logistica, cobranzas]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,9 +50,9 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Suite de regresión
         if: env.OPENAI_API_KEY != ''
-        run: python -m evals.run_regression ${{ matrix.domain }}
+        run: python -m evals.run_regression $DOMAIN
       - uses: actions/upload-artifact@v4
         if: always() && env.OPENAI_API_KEY != ''
         with:
-          name: regression-${{ matrix.domain }}
-          path: evals/reports/regression_${{ matrix.domain }}.md
+          name: regression-${{ env.DOMAIN }}
+          path: evals/reports/regression_${{ env.DOMAIN }}.md

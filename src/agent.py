@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from typing import AsyncIterator
 
 from src.domain import Domain
+from src.harness.budget import BudgetTracker
+from src.harness.router import LLMRouter
 from src.llm.providers import TextDelta
 from src.mcp_client import MCPToolbox
 from src.memory import ConversationStore
@@ -24,11 +26,14 @@ class TurnContext:
 
 
 class Agent:
-    def __init__(self, domain: Domain, toolbox: MCPToolbox, memory: ConversationStore, **harness):
+    def __init__(self, domain: Domain, toolbox: MCPToolbox, router: LLMRouter, budget: BudgetTracker,
+                 memory: ConversationStore, max_tool_iterations: int = 5):
         self.domain = domain
         self.toolbox = toolbox
-        self.memory = memory
-        self.harness = harness  # router, budget, max_tool_iterations... (lo definís vos)
+        self.router = router                            # LLMs con fallback (src/harness/router.py)
+        self.budget = budget                            # costo por conversación (src/harness/budget.py)
+        self.memory = memory                            # historial completo por conversación (src/memory.py)
+        self.max_tool_iterations = max_tool_iterations  # stopping rule del loop de tools
 
     async def run(self, incoming: list[dict], ctx: TurnContext) -> AsyncIterator[TextDelta]:
         """TODO [C16 + C18]
@@ -36,11 +41,11 @@ class Agent:
         1. history = merge_history(self.memory.get(cid), incoming)   (src/memory.py: ya está hecho)
         2. Guardrail de entrada: sacar números de tarjeta / CBU de los mensajes del usuario.
         3. Si el presupuesto de la conversación está agotado → mensaje fijo de cierre, sin llamar al LLM.
-        4. Loop (máximo N vueltas = stopping rule):
-             - llamar al LLM con [system = self.domain.system_prompt(), *history] y
-               tools = self.toolbox.openai_tools + ctx.platform_tools
+        4. Loop (máximo self.max_tool_iterations vueltas = stopping rule):
+             - llamar a self.router.stream([system = self.domain.system_prompt(), *history],
+               tools = self.toolbox.openai_tools + ctx.platform_tools, degrade = presupuesto "degraded")
              - ir emitiendo (yield) los TextDelta a medida que llegan → se hablan en la llamada
-             - sumar el costo al presupuesto (src/llm/pricing.py)
+             - sumar el costo con self.budget.add(cid, cost_usd(...))   (src/llm/pricing.py)
              - si no hay tool_calls → fin del turno
              - si hay tool_calls del MCP → ejecutar con self.toolbox.call(name, args) y agregar los
                mensajes {"role": "tool", ...} al historial; volver a llamar al LLM

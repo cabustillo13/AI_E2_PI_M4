@@ -21,6 +21,6 @@ class LLMRouter:
 
     async def stream(self, messages: list[dict], tools: list[dict], degrade: bool = False
                      ) -> AsyncIterator[TextDelta | LLMResult]:
-        """TODO: si degrade=True empezar por el modelo barato. Tip: asyncio.wait_for sobre el primer evento."""
+        """TODO [C18]: si degrade=True empezar por el modelo barato. Tip: asyncio.wait_for sobre el primer evento."""
         raise NotImplementedError
         yield  # noqa
