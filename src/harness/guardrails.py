@@ -7,7 +7,7 @@ from __future__ import annotations
 
 
 def sanitize_user_text(text: str) -> tuple[str, bool]:
-    """TODO [C18]: reemplazar números de tarjeta (13–19 dígitos que pasan Luhn), CBU (22 dígitos) y códigos de
+    """TODO [C18]: reemplazar números de tarjeta (13-19 dígitos que pasan Luhn), CBU (22 dígitos) y códigos de
     seguridad por un placeholder ANTES de mandar el texto al LLM. Devuelve (texto limpio, si hubo cambios).
     Ojo: el STT suele transcribir la tarjeta con espacios ("4509 9535 ...")."""
     raise NotImplementedError
