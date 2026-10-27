@@ -1,4 +1,4 @@
-"""API de OpsVoice — SCAFFOLD.
+"""API de OpsVoice (SCAFFOLD).
 
 Ya funciona: arranque, carga del domain pack, conexión al server MCP, /health y la demo pública /demo.
 Te toca (buscá los TODO):

@@ -1,4 +1,4 @@
-"""Presupuesto de costo por conversación — SCAFFOLD [C18].
+"""Presupuesto de costo por conversación (SCAFFOLD) [C18].
 
 El presupuesto en USD está en el frontmatter del domain pack (`presupuesto_usd_conversacion`).
 Definí qué hace el agente al acercarse (¿modelo más barato?) y al superarlo (¿cierre cordial?).

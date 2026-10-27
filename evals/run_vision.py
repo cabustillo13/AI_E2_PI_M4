@@ -62,7 +62,7 @@ def main() -> None:
         malos = [k for k, ok in r["campos_ok"].items() if not ok]
         lines.append(f"| {r['archivo']} | {'✅' if r['status_ok'] else '❌'} {r['status']} | "
                      f"{len(r['campos_ok']) - len(malos)}/{len(r['campos_ok'])}{' (falla: ' + ', '.join(malos) + ')' if malos else ''} | "
-                     f"{r['intentos']} | {'; '.join(r['errores']) or '—'} |")
+                     f"{r['intentos']} | {'; '.join(r['errores']) or '-'} |")
     out = ROOT / "evals" / "reports" / "vision.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines), encoding="utf-8")

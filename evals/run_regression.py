@@ -91,8 +91,8 @@ def write_report(domain: str, suite: dict, results: list[dict]) -> float:
              f"- Latencia por turno (texto, sin voz): p95 {p95:.0f} ms", "",
              "| Caso | Resultado | Tools llamadas | Costo USD | Fallas |", "|---|---|---|---|---|"]
     for r in results:
-        lines.append(f"| {r['id']} | {'✅' if r['aprobado'] else '❌'} | {', '.join(r['tools']) or '—'} | "
-                     f"{r['costo_usd']:.4f} | {'; '.join(r['fallas']) or '—'} |")
+        lines.append(f"| {r['id']} | {'✅' if r['aprobado'] else '❌'} | {', '.join(r['tools']) or '-'} | "
+                     f"{r['costo_usd']:.4f} | {'; '.join(r['fallas']) or '-'} |")
     lines += ["", "## Transcripts de los casos fallidos", ""]
     for r in [r for r in results if not r["aprobado"]]:
         lines.append(f"### {r['id']}")

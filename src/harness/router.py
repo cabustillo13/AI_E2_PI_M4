@@ -1,4 +1,4 @@
-"""Fallback entre modelos — SCAFFOLD [C18].
+"""Fallback entre modelos (SCAFFOLD) [C18].
 
 Recorrer una cadena de proveedores (settings.llm_chain) y pasar al siguiente si el actual falla
 (LLMError) o tarda más de settings.first_token_timeout_s en dar la primera señal.

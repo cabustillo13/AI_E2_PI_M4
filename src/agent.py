@@ -1,4 +1,4 @@
-"""Loop del agente (un turno de conversación) — SCAFFOLD.
+"""Loop del agente (SCAFFOLD): un turno de conversación.
 
     mensajes de ElevenLabs → [guardrails] → LLM (router con fallback) ⇄ tools MCP → texto en streaming
 

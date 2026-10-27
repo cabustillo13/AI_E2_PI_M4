@@ -1,4 +1,4 @@
-"""Delta Cobranzas — mock del sistema de cuentas en mora.
+"""Delta Cobranzas: mock del sistema de cuentas en mora.
 
 Reglas de negocio que viven en las tools:
 - Planes: mora <=30 días → hasta 3 cuotas sin interés; 31-60 → hasta 6 cuotas con 5 % de recargo;

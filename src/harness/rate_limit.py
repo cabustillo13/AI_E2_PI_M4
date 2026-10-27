@@ -1,4 +1,4 @@
-"""Rate limit — SCAFFOLD [C18]. N requests por minuto por cliente (conversación o IP) → HTTP 429."""
+"""Rate limit (SCAFFOLD) [C18]. N requests por minuto por cliente (conversación o IP) → HTTP 429."""
 
 from __future__ import annotations
 

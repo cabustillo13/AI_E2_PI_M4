@@ -9,6 +9,8 @@ primer_mensaje: "Hola, te habla Valeria, asistente virtual de Delta Cobranzas, e
 documento_vision: factura
 referencia_documento: cuenta_id
 presupuesto_usd_conversacion: 0.06
+# Tope de duración de la llamada en ElevenLabs: la voz es ~85 % del costo y el presupuesto solo cubre el LLM.
+duracion_max_llamada_s: 300
 
 # Variables de la conversación. Vacías = el cliente inicia el contacto. La demo las completa para
 # simular una campaña de mora en la que el agente contacta al cliente (GET /demo?campana=1).

@@ -1,4 +1,4 @@
-"""Guardrails propios — SCAFFOLD [C18] (además de los de la plataforma ElevenLabs).
+"""Guardrails propios (SCAFFOLD) [C18] (además de los de la plataforma ElevenLabs).
 
 Regla del módulo: el LLM nunca toca datos de pago. Que lo diga el prompt no alcanza.
 """

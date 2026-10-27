@@ -9,6 +9,8 @@ primer_mensaje: "Hola, te comunicás con Rumbo Logística, habla Tomás, el asis
 documento_vision: remito
 referencia_documento: codigo_seguimiento
 presupuesto_usd_conversacion: 0.04
+# Tope de duración de la llamada en ElevenLabs: la voz es ~85 % del costo y el presupuesto solo cubre el LLM.
+duracion_max_llamada_s: 300
 
 resumen: "Consultar el estado de un envío y reprogramar una entrega fallida."
 

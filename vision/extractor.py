@@ -1,4 +1,4 @@
-"""Extracción estructurada de documentos con un modelo de visión — SCAFFOLD [C19].
+"""Extracción estructurada de documentos con un modelo de visión (SCAFFOLD) [C19].
 
     imagen → modelo de visión (structured output = schema de vision/schemas.py) → reglas de negocio
            → ¿relectura indicando qué revisar? → status "valido" | "requiere_revision"

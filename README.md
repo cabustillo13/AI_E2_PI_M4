@@ -1,4 +1,4 @@
-# OpsVoice — Scaffold oficial · Proyecto Integrador M4
+# OpsVoice: Scaffold oficial · Proyecto Integrador M4
 
 Agente de operaciones **voice-first**: atiende por voz, desde una demo web pública, una operación del negocio,
 usa las herramientas del negocio vía **MCP**, procesa un documento con **visión** y corre en
@@ -23,7 +23,7 @@ Leelo primero.
 
 | Ya viene | Construís vos | Clase |
 |---|---|---|
-| `domains/` (prompt, políticas, KB) · `src/domain.py` | — (podés ajustar el prompt) | — |
+| `domains/` (prompt, políticas, KB) · `src/domain.py` | - (podés ajustar el prompt) | - |
 | `mcp_server/` con las tools mock y sus datos · `src/mcp_client.py` | Conectarlas al loop del agente | C16 |
 | `src/main.py` con arranque, `/health`, `/admin/reset` y la demo pública `/demo` | `/v1/chat/completions` con SSE + auth Bearer | C16 |
 | `Dockerfile`, `docker-compose.yml`, `railway.json`, CI | Deploy en Railway con URL pública (**semana 1**) | C17 |

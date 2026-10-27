@@ -9,6 +9,8 @@ primer_mensaje: "Hola, te comunicás con la Clínica San Martín, habla Sofía, 
 documento_vision: orden_medica   # schema en vision/schemas.py
 referencia_documento: dni         # con qué dato se asocia el documento subido
 presupuesto_usd_conversacion: 0.05
+# Tope de duración de la llamada en ElevenLabs: la voz es ~85 % del costo y el presupuesto solo cubre el LLM.
+duracion_max_llamada_s: 300
 
 resumen: "Agendar, reprogramar o cancelar un turno. Cardiología y traumatología piden orden médica."
 

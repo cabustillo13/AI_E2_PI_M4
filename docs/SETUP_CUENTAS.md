@@ -5,7 +5,7 @@ El loop del agente es un loop de tools simple (M3 · clase 11): no hace falta La
 
 | # | Servicio | Qué crear | Variables | ¿Obligatorio? |
 |---|---|---|---|---|
-| 1 | — | Una clave propia para que ElevenLabs llame al backend: `python -c "import secrets; print(secrets.token_urlsafe(32))"` | `OPSVOICE_API_KEY` | Sí |
+| 1 | - | Una clave propia para que ElevenLabs llame al backend: `python -c "import secrets; print(secrets.token_urlsafe(32))"` | `OPSVOICE_API_KEY` | Sí |
 | 2 | OpenAI | API key (platform.openai.com → API keys) | `OPENAI_API_KEY` | Sí (modelo primario y visión) |
 | 3 | Anthropic | API key (console.anthropic.com → API keys) | `ANTHROPIC_API_KEY` | No: solo si el fallback (`LLM_CHAIN`) usa otro proveedor |
 | 4 | Langfuse Cloud | Proyecto → Settings → API keys (plan gratuito) | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | Sí (monitoreo online) |
@@ -30,6 +30,9 @@ Con un solo proveedor de LLM, el fallback es otro modelo del mismo proveedor:
      el DNI. Probalo con las simulaciones antes de darlo por bueno.
    - **Seguridad**: el agente tiene que ser público (sin autenticación) para el widget de `/demo`;
      agregá el dominio de Railway al *allowlist* para que solo funcione desde tu servicio.
+   - **Duración máxima de la llamada** (Advanced → *Max conversation duration*): usá
+     `duracion_max_llamada_s` del domain pack. La voz es ~85 % del costo y `/demo` es pública:
+     el presupuesto del backend solo controla el LLM, este tope controla la voz.
    - Exportar la config (entregable): `python elevenlabs/export_agent.py <dominio> <agent_id>`.
 5. Cargar el `agent_id` en `ELEVENLABS_AGENT_ID` (local y Railway) y abrir `PUBLIC_URL/demo`.
 6. `python -m evals.run_simulations <dominio>` y, después de conversar por la demo,
